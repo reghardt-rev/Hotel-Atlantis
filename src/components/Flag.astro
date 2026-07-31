@@ -1,0 +1,44 @@
+---
+import { localeNames, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: cls = 'h-4 w-6' } = Astro.props;
+const title = localeNames[locale];
+// Unique clip ids so multiple Union Jacks on a page don't collide.
+const uid = 'f' + Math.random().toString(36).slice(2, 8);
+---
+
+<span class:list={['inline-block overflow-hidden rounded-[2px]', cls]} role="img" aria-label={title} title={title}>
+  {locale === 'en' && (
+    <svg viewBox="0 0 60 30" class="h-full w-full">
+      <clipPath id={`${uid}s`}><rect width="60" height="30" /></clipPath>
+      <clipPath id={`${uid}t`}>
+        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+      </clipPath>
+      <g clip-path={`url(#${uid}s)`}>
+        <rect width="60" height="30" fill="#012169" />
+        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6" />
+        <path d="M0,0 L60,30 M60,0 L0,30" clip-path={`url(#${uid}t)`} stroke="#C8102E" stroke-width="4" />
+        <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10" />
+        <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6" />
+      </g>
+    </svg>
+  )}
+  {locale === 'nl' && (
+    <svg viewBox="0 0 3 2" class="h-full w-full">
+      <rect width="3" height="2" fill="#21468B" />
+      <rect width="3" height="1.333" fill="#fff" />
+      <rect width="3" height="0.667" fill="#AE1C28" />
+    </svg>
+  )}
+  {locale === 'de' && (
+    <svg viewBox="0 0 3 2" class="h-full w-full">
+      <rect width="3" height="2" fill="#FFCE00" />
+      <rect width="3" height="1.333" fill="#DD0000" />
+      <rect width="3" height="0.667" fill="#000000" />
+    </svg>
+  )}
+</span>

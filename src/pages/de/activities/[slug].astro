@@ -1,0 +1,18 @@
+---
+import ActivityDetailView from '../../../sections/ActivityDetailView.astro';
+import { listActivities, getActivity, renderMarkdoc } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const activities = await listActivities('de');
+  return activities.map((activity) => ({ params: { slug: activity.slug } }));
+}
+
+const locale = 'de' as const;
+const { slug } = Astro.params;
+const activity = await getActivity(locale, slug!);
+if (!activity) throw new Error(`Activity not found: ${slug}`);
+
+const body = await renderMarkdoc(activity.content);
+---
+
+<ActivityDetailView locale={locale} activity={activity} body={body} />

@@ -1,0 +1,39 @@
+---
+import type { Locale } from '../../lib/i18n';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const c = {
+  en: {
+    kicker: 'Welcome to Hotel Paradis',
+    title: 'Find your oasis by the sea',
+    body: [
+      'Hotel Paradis is more than a place to sleep. It is a destination and a safe harbour, a quiet retreat a few streets back from the Zandvoort coast, where personalised, unhurried hospitality is the whole point.',
+      'From the moment you arrive, our hostess is on hand with a warm welcome and local tips. Affordable luxury, room to breathe, and the sea just down the road.',
+    ],
+  },
+  nl: {
+    kicker: 'Welkom bij Hotel Paradis',
+    title: 'Vind uw oase aan zee',
+    body: [
+      'Hotel Paradis is meer dan een plek om te slapen. Het is een bestemming en een veilige haven, een rustige retraite een paar straten van de kust van Zandvoort, waar persoonlijke en ontspannen gastvrijheid centraal staat.',
+      'Vanaf het moment dat u aankomt staat onze gastvrouw klaar met een warm welkom en lokale tips. Betaalbare luxe, ruimte om te ademen en de zee om de hoek.',
+    ],
+  },
+  de: {
+    kicker: 'Willkommen im Hotel Paradis',
+    title: 'Finden Sie Ihre Oase am Meer',
+    body: [
+      'Das Hotel Paradis ist mehr als nur eine Übernachtung. Es ist ein Ziel und ein sicherer Hafen, ein ruhiger Rückzugsort ein paar Straßen von der Küste Zandvoorts entfernt, in dem persönliche und entspannte Gastfreundschaft im Mittelpunkt steht.',
+      'Vom Moment Ihrer Ankunft an ist unsere Gastgeberin mit einem herzlichen Empfang und lokalen Tipps für Sie da. Bezahlbarer Luxus, Raum zum Durchatmen und das Meer gleich um die Ecke.',
+    ],
+  },
+}[locale];
+---
+
+<section id="welcome" class="mx-auto max-w-3xl px-4 py-20 text-center sm:py-28">
+  <p class="text-xs uppercase tracking-[0.3em] text-clay">{c.kicker}</p>
+  <h2 class="mt-5 font-serif text-4xl leading-tight sm:text-5xl">{c.title}</h2>
+  {c.body.map((p) => <p class="mt-5 text-lg leading-relaxed text-muted">{p}</p>)}
+</section>

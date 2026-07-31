@@ -1,0 +1,33 @@
+---
+import { allFaqItems, faqShortTitle, allFaqsLabel } from '../../lib/faq';
+import { localePath, type Locale } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  limit?: number;
+}
+const { locale, limit = 5 } = Astro.props;
+const items = allFaqItems().slice(0, limit);
+---
+
+<section id="faq" class="bg-sand">
+  <div class="mx-auto max-w-3xl px-4 py-20 sm:py-28">
+    <h2 class="text-center font-serif text-4xl sm:text-5xl">{faqShortTitle[locale]}</h2>
+    <div class="mt-10 divide-y divide-stone-warm border-y border-stone-warm">
+      {items.map((item) => (
+        <details class="group">
+          <summary class="flex cursor-pointer items-center justify-between gap-4 py-5 text-lg font-medium marker:content-['']">
+            {item.q[locale]}
+            <span class="text-clay transition-transform group-open:rotate-45">+</span>
+          </summary>
+          <p class="pb-5 leading-relaxed text-muted">{item.a[locale]}</p>
+        </details>
+      ))}
+    </div>
+    <div class="mt-8 text-center">
+      <a href={localePath(locale, '/faq')} class="text-sm font-medium text-clay hover:underline">
+        {allFaqsLabel[locale]} →
+      </a>
+    </div>
+  </div>
+</section>

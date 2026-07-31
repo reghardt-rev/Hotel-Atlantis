@@ -1,0 +1,43 @@
+---
+import type { Locale } from '../../lib/i18n';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const items = {
+  en: [
+    { t: 'Book direct', d: 'Our best rate, guaranteed' },
+    { t: 'A personal hostess', d: 'A warm welcome and local tips' },
+    { t: 'Dog-friendly', d: 'Your dog is welcome too' },
+    { t: 'By the sea', d: 'A short stroll to the beach' },
+  ],
+  nl: [
+    { t: 'Direct boeken', d: 'Onze beste prijs, gegarandeerd' },
+    { t: 'Persoonlijke gastvrouw', d: 'Een warm welkom en lokale tips' },
+    { t: 'Hondvriendelijk', d: 'Ook uw hond is welkom' },
+    { t: 'Aan zee', d: 'Op loopafstand van het strand' },
+  ],
+  de: [
+    { t: 'Direkt buchen', d: 'Unser bester Preis, garantiert' },
+    { t: 'Persönliche Gastgeberin', d: 'Herzlicher Empfang und lokale Tipps' },
+    { t: 'Hundefreundlich', d: 'Auch Ihr Hund ist willkommen' },
+    { t: 'Am Meer', d: 'Nur wenige Schritte zum Strand' },
+  ],
+}[locale];
+---
+
+<section class="border-b border-stone-warm bg-sand">
+  <div class="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:grid-cols-2 lg:grid-cols-4">
+    {items.map((c) => (
+      <div class="flex items-start gap-3">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-clay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        <div>
+          <p class="text-sm font-medium">{c.t}</p>
+          <p class="text-xs text-muted">{c.d}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>

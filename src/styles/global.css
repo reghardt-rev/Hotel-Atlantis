@@ -1,0 +1,397 @@
+@import "tailwindcss";
+
+/* ---- Design tokens (Mooirivier-inspired: neutral paper, ink, earthy clay) ---- */
+@theme {
+  --font-sans: "Jost", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, "Times New Roman", serif;
+
+  --color-paper: #faf8f5;
+  --color-ink: #201c19;
+  --color-clay: #8a5a44;
+  --color-clay-dark: #6f4835;
+  --color-sand: #efe9e1;
+  --color-stone-warm: #e7e0d6;
+  --color-muted: #766e66;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Anchored sections clear the sticky header when scrolled to. */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* ---- Hero photography -------------------------------------------------------
+   The photos carry the page, so the darkening is pushed out to the edges rather
+   than laid flat across the whole frame: a vignette for depth, plus a lighter
+   top/bottom wash so the header and the booking bar stay legible. A little
+   contrast and saturation stops the images reading as hazy behind it.       */
+.hero-photo {
+  filter: contrast(1.08) saturate(1.06);
+}
+
+/* Carries the hero type over bright slides without darkening the photo itself. */
+.hero-type {
+  text-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.55),
+    0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.hero-overlay {
+  background:
+    /* vignette: clean through the middle, dark into the corners */
+    radial-gradient(
+      118% 82% at 50% 45%,
+      rgba(0, 0, 0, 0.08) 34%,
+      rgba(0, 0, 0, 0.32) 72%,
+      rgba(0, 0, 0, 0.68) 100%
+    ),
+    /* wash: keeps white type readable top and bottom */
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0) 24%,
+      rgba(0, 0, 0, 0) 58%,
+      rgba(0, 0, 0, 0.48) 100%
+    );
+}
+
+/* ---- Scroll scenery ---------------------------------------------------------
+   Two independent pieces on the homepage:
+
+   1. A wave that washes over the whole page as you leave the hero. It is driven
+      by scroll *position*, so it sweeps up and off the top as you descend and
+      runs back down if you scroll up again. Full width, so unlike an edge
+      decoration it works at every screen size.
+   2. A sun in the right-hand gutter, high when you arrive and set at the foot of
+      the page. Sized to the gutter beside the 72rem content column so it can
+      never sit on top of body text, and hidden once that gutter is too narrow.
+
+   Both are fixed and pointer-events:none, and sit above the section backgrounds
+   (several are opaque) rather than behind them.                              */
+
+.wash {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+.wash[data-active] {
+  visibility: visible;
+}
+
+/* Crest at the top, water filling below it; the whole thing is translated from
+   below the fold to above it across the wash window. */
+.wash__body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 140vh;
+  transform: translate3d(0, calc(100vh - var(--wash-p, 0) * 240vh), 0);
+  will-change: transform;
+}
+.wash__crest {
+  height: 110px;
+  flex: none;
+  background-repeat: no-repeat;
+  background-size: 100% 110px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1440' height='120' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cpath d='M0,58 C240,8 480,108 720,58 C960,8 1200,108 1440,58 L1440,120 L0,120 Z' fill='%233f86ad' fill-opacity='0.2'/%3E%3Cpath d='M0,58 C240,8 480,108 720,58 C960,8 1200,108 1440,58' fill='none' stroke='%23eaf6fb' stroke-opacity='0.75' stroke-width='4'/%3E%3C/svg%3E");
+}
+/* Fades out downward so it reads as a wash passing over the page rather than a
+   flat panel. The top stop must match the crest path's fill or a seam shows at
+   the join. A flat fill also turns grey over the warm sand sections: blue at low
+   alpha over #efe9e1 neutralises, so the tint is kept in the upper band where
+   the crest gives it context. */
+.wash__water {
+  flex: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(63, 134, 173, 0.2) 0%,
+    rgba(63, 134, 173, 0.12) 32%,
+    rgba(63, 134, 173, 0) 100%
+  );
+}
+
+.scenery {
+  --gutter: max(0px, calc((100vw - 72rem) / 2));
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.scenery[data-visible] {
+  opacity: 1;
+}
+@media (max-width: 1279px) {
+  .scenery {
+    display: none;
+  }
+}
+
+.scenery-sun {
+  position: absolute;
+  right: max(8px, calc((var(--gutter) - 92px) / 2));
+  bottom: -72px;
+  width: 92px;
+  height: 92px;
+  opacity: 0.65;
+  transform: translate3d(0, calc(var(--sun-t, 0) * -62vh), 0);
+  will-change: transform;
+}
+.scenery-sun span {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+}
+/* Low sun is warm and heavily hazed; high sun is paler and cleaner. */
+.scenery-sun__glow {
+  inset: -55% !important;
+  background: radial-gradient(circle, rgba(201, 122, 66, 0.5), rgba(201, 122, 66, 0) 68%);
+  opacity: calc(1 - var(--sun-t, 0) * 0.55);
+}
+.scenery-sun__warm {
+  background: radial-gradient(circle at 50% 45%, #dd9a5c, #bb6a34 72%);
+  opacity: calc(1 - var(--sun-t, 0));
+}
+.scenery-sun__pale {
+  background: radial-gradient(circle at 50% 45%, #f2cf95, #dfa662 72%);
+  opacity: var(--sun-t, 0);
+}
+
+/* ---- Direct-booking promo --------------------------------------------------- */
+@keyframes promo-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.promo-card {
+  animation: promo-in 0.28s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .promo-card {
+    animation: none;
+  }
+}
+
+/* ---- Booking calendar -------------------------------------------------------
+   Range picker for the hero booking bar. A native date input's popup cannot be
+   styled, so the dates use this instead and it inherits the bar's glass look.
+   Day styling lives here rather than in the script so the classes are never at
+   the mercy of the utility scanner.                                          */
+/* Denser than the bar itself: a grid of small dates needs the photo held back
+   further than a row of large labels does. */
+.cal-panel {
+  background: rgba(32, 28, 25, 0.96);
+}
+
+.cal-month-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.cal-weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 100%;
+  border-radius: 0.4rem;
+  font-size: 0.875rem;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cal-day:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+.cal-day:disabled {
+  color: rgba(255, 255, 255, 0.25);
+  cursor: default;
+}
+.cal-day--range {
+  background: rgba(255, 255, 255, 0.14);
+}
+.cal-day--start,
+.cal-day--end {
+  background: var(--color-clay);
+  font-weight: 500;
+}
+.cal-day--start:hover,
+.cal-day--end:hover {
+  background: var(--color-clay-dark);
+}
+.cal-day--today:not(.cal-day--start):not(.cal-day--end) {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.cal-nav {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.cal-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+.cal-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---- Two-tier site header ---------------------------------------------------
+   .is-hero      -> transparent over the hero (white text)
+   [data-scrolled] or non-hero -> solid paper background with ink text
+   The utility bar collapses once scrolled.                                   */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  color: #fff;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.site-header:not(.is-hero),
+.site-header.is-hero[data-scrolled] {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 rgba(32, 28, 25, 0.08);
+}
+.site-header:not(.is-hero)::before,
+.site-header.is-hero[data-scrolled]::before {
+  opacity: 0;
+}
+
+.site-header__utility {
+  overflow: hidden;
+  max-height: 3rem;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.site-header[data-scrolled] .site-header__utility {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Rendered Markdoc bodies (room descriptions, offer details, etc.). */
+.rich :where(h2) {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 2rem 0 0.75rem;
+}
+.rich :where(h3) {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+.rich :where(p) {
+  margin: 0.85rem 0;
+  line-height: 1.75;
+}
+.rich :where(ul) {
+  list-style: disc;
+  padding-left: 1.35rem;
+  margin: 0.85rem 0;
+}
+.rich :where(ol) {
+  list-style: decimal;
+  padding-left: 1.35rem;
+  margin: 0.85rem 0;
+}
+.rich :where(li) {
+  margin: 0.3rem 0;
+}
+.rich :where(a) {
+  color: var(--color-clay);
+  text-decoration: underline;
+}
+/* Tables come from Markdoc content (e.g. the cookie list in the privacy page).
+   Wrapped in a scroll container so a wide table never widens the page itself. */
+.rich :where(table) {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
+}
+.rich :where(th) {
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: var(--color-sand);
+}
+.rich :where(th),
+.rich :where(td) {
+  border: 1px solid var(--color-stone-warm);
+  padding: 0.55rem 0.75rem;
+  vertical-align: top;
+}
+.rich :where(td) code {
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.rich :where(blockquote) {
+  border-left: 3px solid var(--color-stone-warm);
+  padding-left: 1rem;
+  color: var(--color-muted);
+  font-style: italic;
+  margin: 1.25rem 0;
+}

@@ -1,0 +1,37 @@
+---
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  room: { slug: string; entry: any; photos?: { src: string; alt: string }[] };
+  locale: Locale;
+}
+const { room, locale } = Astro.props;
+const tr = t(locale);
+const e = room.entry;
+const cover = room.photos?.[0];
+const href = localePath(locale, `/rooms/${room.slug}`);
+const meta = [e.maxOccupancy && `${e.maxOccupancy} ${tr.guests}`, e.sizeSqm && `${e.sizeSqm} m²`]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<a href={href} class="group block">
+  <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
+    {cover && (
+      <img
+        src={cover.src}
+        alt={cover.alt}
+        loading="lazy"
+        decoding="async"
+        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    )}
+  </div>
+  <div class="mt-4 flex items-baseline justify-between gap-3">
+    <h3 class="font-serif text-2xl">{e.title}</h3>
+    {e.priceFrom != null && <span class="shrink-0 text-sm text-muted">{tr.from} €{e.priceFrom}</span>}
+  </div>
+  {meta && <p class="mt-1 text-xs uppercase tracking-wide text-muted">{meta}</p>}
+  {e.shortDescription && <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{e.shortDescription}</p>}
+  <span class="mt-3 inline-block text-sm font-medium text-clay group-hover:underline">{tr.viewRoom} →</span>
+</a>

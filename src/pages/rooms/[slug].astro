@@ -1,0 +1,26 @@
+---
+import RoomDetailView from '../../sections/RoomDetailView.astro';
+import { listRooms, getRoom, getRoomPhotos, getSettings, renderMarkdoc } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const rooms = await listRooms('en');
+  return rooms.map((room) => ({ params: { slug: room.slug } }));
+}
+
+const locale = 'en' as const;
+const { slug } = Astro.params;
+const room = await getRoom(locale, slug!);
+if (!room) throw new Error(`Room not found: ${slug}`);
+
+const settings = await getSettings();
+const body = await renderMarkdoc(room.content);
+const photos = await getRoomPhotos(room);
+---
+
+<RoomDetailView
+  locale={locale}
+  room={room}
+  body={body}
+  photos={photos}
+  mewsConfigId={settings?.mewsConfigId || undefined}
+/>

@@ -1,0 +1,101 @@
+---
+/**
+ * Cookie consent banner.
+ *
+ * The site sets analytics cookies (GA4 via gtag.js, plus GTM), which under
+ * GDPR/ePrivacy need consent *before* they are set — so Layout.astro declares
+ * Google Consent Mode v2 defaults of `denied` above the tag scripts, and this
+ * banner flips analytics_storage to `granted` only if the visitor accepts.
+ *
+ * Accept and Reject are given equal weight: consent has to be as easy to refuse
+ * as to give. The choice is stored in localStorage (not sessionStorage) so it
+ * persists, and can be changed later from the footer link.
+ */
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+---
+
+<div
+  data-cookie-banner
+  hidden
+  role="dialog"
+  aria-live="polite"
+  aria-label={tr.cookies.title}
+  class="fixed inset-x-0 bottom-0 z-[80] border-t border-stone-warm bg-paper/98 shadow-[0_-8px_30px_rgba(32,28,25,0.12)] backdrop-blur"
+>
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+    <p class="text-sm leading-relaxed text-muted">
+      <span class="font-medium text-ink">{tr.cookies.title}.</span>{' '}
+      {tr.cookies.body}
+    </p>
+
+    <div class="flex shrink-0 gap-3">
+      <button
+        type="button"
+        data-cookie-reject
+        class="inline-flex cursor-pointer items-center justify-center rounded-full border border-stone-warm px-6 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-sand focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2"
+      >
+        {tr.cookies.reject}
+      </button>
+      <button
+        type="button"
+        data-cookie-accept
+        class="inline-flex cursor-pointer items-center justify-center rounded-full bg-clay px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2"
+      >
+        {tr.cookies.accept}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const KEY = 'paradis-consent';
+  const banner = document.querySelector<HTMLElement>('[data-cookie-banner]');
+
+  if (banner) {
+    const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+
+    // Storage throws in some private modes; never let that break the page.
+    const read = () => {
+      try {
+        return JSON.parse(localStorage.getItem(KEY) || 'null');
+      } catch {
+        return null;
+      }
+    };
+
+    function decide(analytics: boolean) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ analytics, at: new Date().toISOString() }));
+      } catch {
+        /* choice just won't persist */
+      }
+      // Consent Mode: only ever *raise* analytics. Refusal leaves the denied
+      // default from Layout in place, so no analytics cookie is written.
+      if (analytics && typeof w.gtag === 'function') {
+        w.gtag('consent', 'update', { analytics_storage: 'granted' });
+      }
+      banner.hidden = true;
+      // Lets the promo modal know it can take the screen now.
+      window.dispatchEvent(new CustomEvent('paradis:consent', { detail: { analytics } }));
+    }
+
+    banner.querySelector('[data-cookie-accept]')?.addEventListener('click', () => decide(true));
+    banner.querySelector('[data-cookie-reject]')?.addEventListener('click', () => decide(false));
+
+    // Footer link (and anything else) can reopen the choice.
+    document.querySelectorAll('[data-cookie-settings]').forEach((el) =>
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        banner.hidden = false;
+      }),
+    );
+
+    if (!read()) banner.hidden = false;
+  }
+</script>

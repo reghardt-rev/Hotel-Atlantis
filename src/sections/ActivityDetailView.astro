@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { t, localePath, formatDate, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  activity: any;
+  body: string;
+}
+const { locale, activity, body } = Astro.props;
+const tr = t(locale);
+---
+
+<Layout title={activity.title} description={activity.summary || ''} locale={locale}>
+  <article class="mx-auto max-w-4xl px-4 py-16">
+    <a href={localePath(locale, '/activities')} class="text-sm text-muted hover:text-ink">
+      {tr.backToActivities}
+    </a>
+
+    <h1 class="mt-4 font-serif text-5xl sm:text-6xl">{activity.title}</h1>
+
+    {activity.publishedAt && (
+      <p class="mt-4 text-sm text-muted">{formatDate(locale, activity.publishedAt)}</p>
+    )}
+
+    <div class="mt-8 aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
+      {activity.image && <img src={activity.image} alt={activity.title} class="h-full w-full object-cover" />}
+    </div>
+
+    {activity.summary && (
+      <p class="mt-8 font-serif text-2xl leading-snug text-ink">{activity.summary}</p>
+    )}
+
+    <div class="rich mt-8 text-ink" set:html={body} />
+
+    <div class="mt-12 border-t border-stone-warm pt-8">
+      <a href={localePath(locale, '/activities')} class="text-sm font-medium text-clay hover:underline">
+        {tr.allActivities} →
+      </a>
+    </div>
+  </article>
+</Layout>

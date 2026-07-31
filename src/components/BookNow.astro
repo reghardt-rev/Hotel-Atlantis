@@ -1,0 +1,103 @@
+---
+/**
+ * Mews Booking Engine (Distributor) launch button.
+ *
+ * Mews.D([configId]) initialises the Distributor with `openElements: ".distributor"`,
+ * so it opens the booking engine when any element with the `distributor` class is
+ * clicked. We therefore give the button that class and let Mews handle the click —
+ * we do NOT call open() ourselves. The config id comes from Site settings, with the
+ * property's known id as a fallback.
+ */
+interface Props {
+  configId?: string;
+  label?: string;
+  class?: string;
+  /** Where on the page this button sits — reported to GA4 as button_location. */
+  location?: string;
+}
+const {
+  configId = '4808678c-b67e-44bf-ad85-ae2800f64c7f',
+  label = 'Book now',
+  class: className = '',
+  location = 'unknown',
+} = Astro.props;
+---
+
+<button
+  type="button"
+  data-mews-config={configId}
+  data-book-location={location}
+  class:list={[
+    'distributor',
+    'inline-flex cursor-pointer items-center justify-center rounded-full bg-clay px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2',
+    className,
+  ]}
+>
+  {label}
+</button>
+
+<script>
+  import { track } from '../lib/analytics';
+
+  // Report every click that opens the booking engine. Mews binds its own handler
+  // to the same elements; both run, and this one never blocks it.
+  document.querySelectorAll<HTMLElement>('.distributor[data-book-location]').forEach((el) => {
+    el.addEventListener('click', () => {
+      track('book_now_click', {
+        button_location: el.dataset.bookLocation || 'unknown',
+        page_language: document.documentElement.lang || 'en',
+      });
+    });
+  });
+
+  // Load the Mews Distributor once per page. It binds a click handler to every
+  // element matching `.distributor` (its openElements selector) that opens the
+  // booking engine. When a GTM container id is present (meta[name="mews-gtm"]),
+  // we pass it so Mews pushes booking/purchase events (incl. value) to GTM,
+  // which then feeds GA4 and Cendyn's marketing attribution.
+  const w = window as any;
+  const trigger = document.querySelector<HTMLElement>('.distributor[data-mews-config]');
+  const configId = trigger?.dataset.mewsConfig;
+  const gtmId = document.querySelector('meta[name="mews-gtm"]')?.getAttribute('content') || '';
+
+  // Open the booking engine in the language of the page (it defaults to en-GB).
+  const langs: Record<string, string> = { en: 'en-GB', nl: 'nl-NL', de: 'de-DE' };
+  const language = langs[document.documentElement.lang] || 'en-GB';
+
+  if (configId && !w.__mewsLoaded) {
+    w.__mewsLoaded = true;
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://app.mews.com/distributor/distributor.min.js';
+    s.onload = () => {
+      // The Distributor takes its language from the page URL, not from the
+      // equivalent init option, and it reads the query only after fetching its
+      // configuration. So set `language` for the load and restore the address
+      // bar in the ready callback, once the value has been consumed.
+      const original = window.location.href;
+      const url = new URL(original);
+      const patch = !url.searchParams.has('language');
+      const restore = () => {
+        if (patch) history.replaceState(history.state, '', original);
+      };
+      if (patch) {
+        url.searchParams.set('language', language);
+        history.replaceState(history.state, '', url);
+      }
+      try {
+        w.Mews.Distributor(
+          {
+            configurationIds: [configId],
+            openElements: '.distributor',
+            ...(gtmId ? { gtmContainerId: gtmId } : {}),
+          },
+          restore,
+        );
+      } catch (e) {
+        console.warn('[Mews] init failed', e);
+        restore();
+      }
+    };
+    document.head.appendChild(s);
+  }
+</script>

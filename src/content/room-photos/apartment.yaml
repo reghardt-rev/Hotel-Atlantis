@@ -1,0 +1,19 @@
+name: Apartment
+heroImage: /images/rooms/apartment/heroImage.jpg
+images:
+  - image: /images/rooms/apartment/images/0/image.jpg
+    alt: '2'
+  - image: /images/rooms/apartment/images/1/image.jpg
+    alt: '3'
+  - image: /images/rooms/apartment/images/2/image.jpg
+    alt: '4'
+  - image: /images/rooms/apartment/images/3/image.jpg
+    alt: '5'
+  - image: /images/rooms/apartment/images/4/image.jpg
+    alt: '6'
+  - image: /images/rooms/apartment/images/5/image.jpg
+    alt: '7'
+  - image: /images/rooms/apartment/images/6/image.jpg
+    alt: '8'
+  - image: /images/rooms/apartment/images/7/image.jpg
+    alt: '9'

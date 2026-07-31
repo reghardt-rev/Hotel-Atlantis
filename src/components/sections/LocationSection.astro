@@ -1,0 +1,58 @@
+---
+import type { Locale } from '../../lib/i18n';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const c = {
+  en: {
+    kicker: 'Zandvoort & the coast',
+    title: 'Where the coast meets calm',
+    body: 'Wide beaches and long sunsets, surfing, paddleboarding and kiteboarding for the adventurous, and quiet cycle paths for everyone else. Borrow a bike at reception and explore the dunes, or let our hostess point you to the day’s best spot.',
+    near: [
+      { t: 'The beach', d: 'A short walk from your room' },
+      { t: 'Nationaal Park Zuid-Kennemerland', d: 'Dunes and 60+ km of trails' },
+      { t: 'Haarlem', d: 'Historic centre, a short hop away' },
+      { t: 'Amsterdam', d: 'Easy by car or train' },
+    ],
+  },
+  nl: {
+    kicker: 'Zandvoort & de kust',
+    title: 'Waar de kust rust ontmoet',
+    body: 'Weidse stranden en lange zonsondergangen, surfen, suppen en kitesurfen voor de avonturiers, en rustige fietspaden voor alle anderen. Leen een fiets bij de receptie en ontdek de duinen, of laat onze gastvrouw u de mooiste plek van de dag wijzen.',
+    near: [
+      { t: 'Het strand', d: 'Op loopafstand van uw kamer' },
+      { t: 'Nationaal Park Zuid-Kennemerland', d: 'Duinen en 60+ km wandelpaden' },
+      { t: 'Haarlem', d: 'Historisch centrum, vlakbij' },
+      { t: 'Amsterdam', d: 'Eenvoudig met auto of trein' },
+    ],
+  },
+  de: {
+    kicker: 'Zandvoort & die Küste',
+    title: 'Wo die Küste auf Ruhe trifft',
+    body: 'Weite Strände und lange Sonnenuntergänge, Surfen, Stand-up-Paddling und Kitesurfen für Abenteuerlustige und ruhige Radwege für alle anderen. Leihen Sie sich an der Rezeption ein Fahrrad und erkunden Sie die Dünen, oder lassen Sie sich von unserer Gastgeberin den schönsten Ort des Tages zeigen.',
+    near: [
+      { t: 'Der Strand', d: 'Nur wenige Gehminuten von Ihrem Zimmer' },
+      { t: 'Nationalpark Zuid-Kennemerland', d: 'Dünen und über 60 km Wanderwege' },
+      { t: 'Haarlem', d: 'Historisches Zentrum, ganz in der Nähe' },
+      { t: 'Amsterdam', d: 'Bequem mit dem Auto oder der Bahn' },
+    ],
+  },
+}[locale];
+---
+
+<section id="location" class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
+  <div class="max-w-2xl">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{c.kicker}</p>
+    <h2 class="mt-4 font-serif text-4xl sm:text-5xl">{c.title}</h2>
+    <p class="mt-5 text-lg leading-relaxed text-muted">{c.body}</p>
+  </div>
+  <div class="mt-12 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+    {c.near.map((n) => (
+      <div class="border-t border-stone-warm pt-4">
+        <p class="font-medium">{n.t}</p>
+        <p class="mt-1 text-sm text-muted">{n.d}</p>
+      </div>
+    ))}
+  </div>
+</section>

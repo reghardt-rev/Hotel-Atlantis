@@ -1,0 +1,115 @@
+---
+/**
+ * Auto-advancing crossfade carousel for the front page.
+ * Slides are managed in Keystatic (Homepage → Front-page carousel).
+ * Overlay content (tagline, Book now) is passed via the default slot.
+ */
+interface Slide {
+  image: string;
+  alt?: string;
+}
+interface Props {
+  slides: Slide[];
+  interval?: number;
+}
+const { slides, interval = 6000 } = Astro.props;
+const hasBottom = Astro.slots.has('bottom');
+---
+
+<section class="relative isolate overflow-hidden" data-carousel data-interval={interval}>
+  <div class="relative h-dvh w-full">
+    {slides.map((s, i) => (
+      <img
+        src={s.image}
+        alt={s.alt ?? ''}
+        data-slide
+        loading={i === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+        class:list={[
+          'hero-photo absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out',
+          i === 0 ? 'opacity-100' : 'opacity-0',
+        ]}
+      />
+    ))}
+
+    <!-- vignette + legibility wash -->
+    <div class="hero-overlay absolute inset-0"></div>
+
+    <!-- overlay content -->
+    <div class="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-white">
+      <slot />
+    </div>
+
+    {/* Anchored above the slide dots — used for the booking bar. */}
+    {hasBottom && (
+      <div class="absolute inset-x-0 bottom-20 z-20 px-4 sm:bottom-24">
+        <slot name="bottom" />
+      </div>
+    )}
+
+    {slides.length > 1 && (
+      <>
+        {/* Controls sit in the lower corners so they stay clear of the headline. */}
+        <button
+          type="button"
+          data-carousel-prev
+          aria-label="Previous slide"
+          class="absolute bottom-4 left-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
+        >‹</button>
+        <button
+          type="button"
+          data-carousel-next
+          aria-label="Next slide"
+          class="absolute bottom-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
+        >›</button>
+        <div class="absolute bottom-4 left-1/2 z-20 flex h-10 -translate-x-1/2 items-center gap-2">
+          {slides.map((_, i) => (
+            <button
+              type="button"
+              data-carousel-dot
+              aria-label={`Go to slide ${i + 1}`}
+              class:list={['h-2.5 w-2.5 rounded-full transition', i === 0 ? 'bg-white' : 'bg-white/50']}
+            ></button>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-slide]'));
+    const dots = Array.from(root.querySelectorAll<HTMLElement>('[data-carousel-dot]'));
+    if (slides.length < 2) return;
+
+    const interval = Number(root.dataset.interval) || 6000;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let index = 0;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    function show(n: number) {
+      index = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => (s.style.opacity = k === index ? '1' : '0'));
+      dots.forEach((d, k) => {
+        d.classList.toggle('bg-white', k === index);
+        d.classList.toggle('bg-white/50', k !== index);
+      });
+    }
+    const next = () => show(index + 1);
+    const prev = () => show(index - 1);
+    const stop = () => timer && clearInterval(timer);
+    const start = () => {
+      if (reduce) return;
+      stop();
+      timer = setInterval(next, interval);
+    };
+
+    root.querySelector('[data-carousel-next]')?.addEventListener('click', () => (next(), start()));
+    root.querySelector('[data-carousel-prev]')?.addEventListener('click', () => (prev(), start()));
+    dots.forEach((d, k) => d.addEventListener('click', () => (show(k), start())));
+    root.addEventListener('mouseenter', stop);
+    root.addEventListener('mouseleave', start);
+    start();
+  });
+</script>

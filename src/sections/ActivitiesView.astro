@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ActivityCard from '../components/ActivityCard.astro';
+import { listActivities } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+const activities = await listActivities(locale);
+---
+
+<Layout title={tr.nav.activities} description={tr.ourActivities} locale={locale}>
+  <section class="mx-auto max-w-6xl px-4 py-16">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.activities}</p>
+    <h1 class="mt-3 font-serif text-5xl">{tr.ourActivities}</h1>
+
+    {activities.length > 0 ? (
+      <div class="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+        {activities.map((activity) => <ActivityCard activity={activity} locale={locale} />)}
+      </div>
+    ) : (
+      <p class="mt-8 text-muted">{tr.noActivities}</p>
+    )}
+  </section>
+</Layout>

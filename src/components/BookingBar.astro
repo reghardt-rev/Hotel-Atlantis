@@ -1,0 +1,338 @@
+---
+/**
+ * Hero booking bar — arrival, departure, guests, and a Book button that opens
+ * the Mews Booking Engine prefilled with that search.
+ *
+ * How the hand-off works: the Mews Distributor reads the search from the *page
+ * URL* when it initialises (`mewsStart` / `mewsEnd` / `mewsAdultCount`) and opens
+ * itself straight away when `mewsDistributorOpened` is present. Those values are
+ * only read once, at init, so submitting navigates to the same page carrying the
+ * params rather than trying to push dates into an already-running widget.
+ *
+ * The dates use a custom range calendar rather than <input type="date">: a
+ * native date popup is drawn by the browser and cannot be styled, so it could
+ * never match the glass bar. The panel opens upward because the bar sits near
+ * the bottom of the hero, which is clipped (`overflow-hidden`) below it.
+ */
+import { t, localeTags, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: className = '' } = Astro.props;
+const tr = t(locale);
+
+const guestCounts = [1, 2, 3, 4, 5, 6];
+const guestLabel = (n: number) => `${n} ${n === 1 ? tr.booking.guestOne : tr.booking.guestMany}`;
+
+// Sits over the hero photography: translucent glass, white type.
+const fieldClass =
+  'mt-1.5 w-full rounded-lg border border-white/30 bg-white/15 px-3 py-2.5 text-left text-sm text-white transition-colors focus:border-white/70 focus:outline-none focus:ring-1 focus:ring-white/70';
+const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-white/80';
+---
+
+<form
+  data-booking-bar
+  data-locale-tag={localeTags[locale]}
+  data-hint-start={tr.booking.arrival}
+  data-hint-end={tr.booking.departure}
+  class:list={[
+    'relative mx-auto max-w-5xl rounded-2xl bg-white/10 p-4 shadow-xl ring-1 ring-white/20 backdrop-blur-md sm:p-5',
+    className,
+  ]}
+>
+  <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[1fr_1fr_minmax(9rem,auto)_auto] lg:items-end">
+    <div>
+      <span class={labelClass} id="booking-arrival-label">{tr.booking.arrival}</span>
+      <button
+        type="button"
+        data-field="start"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-labelledby="booking-arrival-label"
+        class={`${fieldClass} cursor-pointer`}
+      >
+        <span data-display="start">&nbsp;</span>
+      </button>
+    </div>
+
+    <div>
+      <span class={labelClass} id="booking-departure-label">{tr.booking.departure}</span>
+      <button
+        type="button"
+        data-field="end"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-labelledby="booking-departure-label"
+        class={`${fieldClass} cursor-pointer`}
+      >
+        <span data-display="end">&nbsp;</span>
+      </button>
+    </div>
+
+    <div>
+      <label class={labelClass} for="booking-guests">{tr.booking.guests}</label>
+      <select id="booking-guests" name="guests" data-guests class={`${fieldClass} [color-scheme:dark]`}>
+        {guestCounts.map((n) => (
+          <option value={n} selected={n === 2} class="bg-ink text-white">{guestLabel(n)}</option>
+        ))}
+      </select>
+    </div>
+
+    <button
+      type="submit"
+      class="mt-[1.35rem] inline-flex cursor-pointer items-center justify-center self-end rounded-full bg-clay px-8 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-0"
+    >
+      {tr.book}
+    </button>
+  </div>
+
+  <input type="hidden" name="arrival" data-value="start" />
+  <input type="hidden" name="departure" data-value="end" />
+
+  <div
+    data-calendar
+    role="dialog"
+    aria-label={`${tr.booking.arrival} / ${tr.booking.departure}`}
+    hidden
+    class="cal-panel absolute bottom-full left-0 right-0 z-40 mb-3 rounded-2xl p-4 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl sm:p-5"
+  >
+    <div class="flex items-center justify-between gap-4">
+      <button type="button" data-cal-prev aria-label="Previous month" class="cal-nav">‹</button>
+      <p data-cal-hint class="flex-1 text-center text-[0.65rem] font-medium uppercase tracking-[0.2em] text-white/70"></p>
+      <button type="button" data-cal-next aria-label="Next month" class="cal-nav">›</button>
+    </div>
+    <div data-cal-grid class="mt-4 grid gap-6 sm:grid-cols-2"></div>
+  </div>
+</form>
+
+<script>
+  import { track } from '../lib/analytics';
+
+  const bar = document.querySelector<HTMLFormElement>('[data-booking-bar]');
+
+  if (bar) {
+    const tag = bar.dataset.localeTag || 'en-GB';
+    const startValue = bar.querySelector<HTMLInputElement>('[data-value="start"]');
+    const endValue = bar.querySelector<HTMLInputElement>('[data-value="end"]');
+    const startText = bar.querySelector<HTMLElement>('[data-display="start"]');
+    const endText = bar.querySelector<HTMLElement>('[data-display="end"]');
+    const guests = bar.querySelector<HTMLSelectElement>('[data-guests]');
+    const panel = bar.querySelector<HTMLElement>('[data-calendar]');
+    const grid = bar.querySelector<HTMLElement>('[data-cal-grid]');
+    const hint = bar.querySelector<HTMLElement>('[data-cal-hint]');
+    const prevBtn = bar.querySelector<HTMLButtonElement>('[data-cal-prev]');
+    const nextBtn = bar.querySelector<HTMLButtonElement>('[data-cal-next]');
+    const triggers = Array.from(bar.querySelectorAll<HTMLButtonElement>('[data-field]'));
+
+    if (startValue && endValue && startText && endText && guests && panel && grid) {
+      // Local-time ISO date (toISOString() would shift the day either side of UTC).
+      const iso = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const parse = (s: string) => new Date(`${s}T00:00:00`);
+      const addDays = (s: string, n: number) => {
+        const d = parse(s);
+        d.setDate(d.getDate() + n);
+        return iso(d);
+      };
+
+      // Defaults are computed in the browser, not at build time — the site is
+      // static, so a build-time "today" would go stale the next day.
+      const today = iso(new Date());
+
+      const fmtField = new Intl.DateTimeFormat(tag, { day: '2-digit', month: 'short', year: 'numeric' });
+      const fmtMonth = new Intl.DateTimeFormat(tag, { month: 'long', year: 'numeric' });
+      const fmtFull = new Intl.DateTimeFormat(tag, { weekday: 'long', day: 'numeric', month: 'long' });
+      // 2024-01-01 was a Monday; the grid is Monday-first for all three locales.
+      const weekdays = Array.from({ length: 7 }, (_, i) =>
+        new Intl.DateTimeFormat(tag, { weekday: 'short', timeZone: 'UTC' }).format(
+          new Date(Date.UTC(2024, 0, 1 + i)),
+        ),
+      );
+
+      let start: string | null = null;
+      let end: string | null = null;
+      let picking: 'start' | 'end' = 'start';
+      let hover: string | null = null;
+      let view = parse(today);
+
+      const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+      const shiftMonth = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+      view = monthStart(view);
+
+      const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+      function monthHtml(base: Date, hideOnMobile: boolean) {
+        const y = base.getFullYear();
+        const m = base.getMonth();
+        const lead = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
+        const days = new Date(y, m + 1, 0).getDate();
+
+        // While picking a departure, preview the range under the cursor.
+        const previewEnd = end || (picking === 'end' && start && hover && hover > start ? hover : null);
+
+        const cells: string[] = [];
+        for (let i = 0; i < lead; i++) cells.push('<span></span>');
+
+        for (let d = 1; d <= days; d++) {
+          const value = iso(new Date(y, m, d));
+          const disabled = value < today || (picking === 'end' && !!start && value <= start);
+          const classes = ['cal-day'];
+          if (value === today) classes.push('cal-day--today');
+          if (value === start) classes.push('cal-day--start');
+          if (value === end) classes.push('cal-day--end');
+          if (start && previewEnd && value > start && value < previewEnd) classes.push('cal-day--range');
+
+          cells.push(
+            `<button type="button" class="${classes.join(' ')}" data-day="${value}"` +
+              `${disabled ? ' disabled' : ''} aria-label="${esc(fmtFull.format(parse(value)))}">${d}</button>`,
+          );
+        }
+
+        return (
+          `<div${hideOnMobile ? ' class="hidden sm:block"' : ''}>` +
+          `<p class="cal-month-title">${esc(fmtMonth.format(base))}</p>` +
+          `<div class="cal-grid mt-3">${weekdays.map((w) => `<span class="cal-weekday">${esc(w)}</span>`).join('')}</div>` +
+          `<div class="cal-grid mt-1">${cells.join('')}</div>` +
+          `</div>`
+        );
+      }
+
+      function render() {
+        grid.innerHTML = monthHtml(view, false) + monthHtml(shiftMonth(view, 1), true);
+        if (prevBtn) prevBtn.disabled = iso(view) <= iso(monthStart(parse(today)));
+        if (hint) {
+          hint.textContent =
+            (picking === 'start' ? bar.dataset.hintStart : bar.dataset.hintEnd) ?? '';
+        }
+      }
+
+      function sync() {
+        startValue.value = start ?? '';
+        endValue.value = end ?? '';
+        startText.textContent = start ? fmtField.format(parse(start)) : ' ';
+        endText.textContent = end ? fmtField.format(parse(end)) : ' ';
+      }
+
+      function open(which: 'start' | 'end') {
+        picking = which === 'end' && start ? 'end' : 'start';
+        const anchor = (which === 'end' ? end || start : start) || today;
+        view = monthStart(parse(anchor));
+        hover = null;
+        panel.hidden = false;
+        triggers.forEach((t) => t.setAttribute('aria-expanded', String(t.dataset.field === which)));
+        render();
+      }
+
+      function close() {
+        panel.hidden = true;
+        hover = null;
+        triggers.forEach((t) => t.setAttribute('aria-expanded', 'false'));
+      }
+
+      function select(value: string) {
+        if (picking === 'start' || !start || value <= start) {
+          start = value;
+          end = null;
+          picking = 'end';
+          sync();
+          render();
+        } else {
+          end = value;
+          picking = 'start';
+          sync();
+          render();
+          setTimeout(close, 160);
+        }
+      }
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+          const which = trigger.dataset.field as 'start' | 'end';
+          if (!panel.hidden && trigger.getAttribute('aria-expanded') === 'true') close();
+          else open(which);
+        });
+      });
+
+      prevBtn?.addEventListener('click', () => {
+        view = shiftMonth(view, -1);
+        render();
+      });
+      nextBtn?.addEventListener('click', () => {
+        view = shiftMonth(view, 1);
+        render();
+      });
+
+      grid.addEventListener('click', (e) => {
+        const cell = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-day]');
+        if (cell && !cell.disabled) select(cell.dataset.day!);
+      });
+
+      // Range preview only matters while a departure is being chosen.
+      grid.addEventListener('mouseover', (e) => {
+        if (picking !== 'end' || !start) return;
+        const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-day]');
+        const value = cell?.dataset.day ?? null;
+        if (value !== hover) {
+          hover = value;
+          render();
+        }
+      });
+
+      // Dismiss on pointerdown, not click: selecting a day re-renders the grid,
+      // which detaches the clicked button before the click finishes bubbling —
+      // a `click` check would then see it as a click outside the bar and close.
+      document.addEventListener('pointerdown', (e) => {
+        if (!panel.hidden && !bar.contains(e.target as Node)) close();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !panel.hidden) close();
+      });
+
+      // Reopening after a search? Show what was searched for, else tonight → tomorrow.
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get('mewsStart');
+      const toUrl = params.get('mewsEnd');
+      start = fromUrl && fromUrl >= today ? fromUrl : today;
+      end = toUrl && toUrl > start ? toUrl : addDays(start, 1);
+
+      const adults = params.get('mewsAdultCount');
+      if (adults && guests.querySelector(`option[value="${adults}"]`)) guests.value = adults;
+
+      sync();
+
+      bar.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!start) start = today;
+        if (!end || end <= start) end = addDays(start, 1);
+
+        // Fired before navigating, so the search itself is recorded even though
+        // the page reloads to hand the dates to Mews.
+        const nights = Math.round(
+          (parse(end).getTime() - parse(start).getTime()) / 86400000,
+        );
+        track('book_now_click', {
+          button_location: 'booking_bar',
+          page_language: document.documentElement.lang || 'en',
+          arrival: start,
+          departure: end,
+          nights,
+          guests: Number(guests.value),
+        });
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('mewsStart', start);
+        url.searchParams.set('mewsEnd', end);
+        url.searchParams.set('mewsAdultCount', guests.value);
+        url.searchParams.set('mewsDistributorOpened', '1');
+
+        // Small buffer so the analytics request is away before the page unloads.
+        // Navigation is on a plain timer, not an analytics callback, so a blocked
+        // or failed tag can never strand someone on the booking bar.
+        const go = () => window.location.assign(url.toString());
+        setTimeout(go, 150);
+      });
+    }
+  }
+</script>

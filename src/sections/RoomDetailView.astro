@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+import BookNow from '../components/BookNow.astro';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  room: any;
+  body: string;
+  photos: { src: string; alt: string }[];
+  mewsConfigId?: string;
+}
+const { locale, room, body, photos, mewsConfigId } = Astro.props;
+const tr = t(locale);
+---
+
+<Layout title={room.title} description={room.shortDescription || ''} locale={locale}>
+  <article class="mx-auto max-w-4xl px-4 py-16">
+    <a href={localePath(locale, '/rooms')} class="text-sm text-muted hover:text-ink">
+      {tr.backToRooms}
+    </a>
+
+    <h1 class="mt-4 font-serif text-5xl sm:text-6xl">{room.title}</h1>
+
+    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+      {room.maxOccupancy != null && <span>{room.maxOccupancy} {tr.guests}</span>}
+      {room.sizeSqm != null && <span>{tr.sizeLabel}: {room.sizeSqm} m²</span>}
+      {room.bedType && <span>{tr.bedLabel}: {room.bedType}</span>}
+    </div>
+
+    <div data-room-gallery class="mt-8">
+      <div class="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
+        {photos[0] && (
+          <img data-room-main src={photos[0].src} alt={photos[0].alt} class="h-full w-full object-cover" />
+        )}
+      </div>
+
+      {photos.length > 1 && (
+        <div class="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
+          {photos.map((photo, i) => (
+            <button
+              type="button"
+              data-room-thumb
+              data-src={photo.src}
+              data-alt={photo.alt}
+              aria-label={photo.alt}
+              aria-current={i === 0 ? 'true' : 'false'}
+              class="aspect-[4/3] cursor-pointer overflow-hidden rounded-lg ring-2 ring-transparent transition aria-[current=true]:ring-clay hover:opacity-90"
+            >
+              <img src={photo.src} alt="" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {room.shortDescription && <p class="mt-8 font-serif text-2xl leading-snug text-ink">{room.shortDescription}</p>}
+
+    {room.amenities?.length > 0 && (
+      <ul class="mt-6 flex flex-wrap gap-2">
+        {room.amenities.map((a: string) => (
+          <li class="rounded-full bg-sand px-3 py-1 text-sm text-ink">{a}</li>
+        ))}
+      </ul>
+    )}
+
+    <div class="rich mt-8 text-ink" set:html={body} />
+
+    <div class="mt-10 flex items-center gap-4">
+      <BookNow configId={mewsConfigId} label={tr.book} location="room_page" />
+      {room.priceFrom != null && (
+        <span class="text-sm text-muted">{tr.from} €{room.priceFrom} / {tr.perNight}</span>
+      )}
+    </div>
+  </article>
+</Layout>
+
+<script>
+  // Thumbnails swap the main photo. No-op on rooms with a single picture.
+  const gallery = document.querySelector<HTMLElement>('[data-room-gallery]');
+  const main = gallery?.querySelector<HTMLImageElement>('[data-room-main]');
+  const thumbs = gallery ? Array.from(gallery.querySelectorAll<HTMLButtonElement>('[data-room-thumb]')) : [];
+
+  if (main && thumbs.length > 1) {
+    thumbs.forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        main.src = thumb.dataset.src || main.src;
+        main.alt = thumb.dataset.alt || '';
+        thumbs.forEach((t) => t.setAttribute('aria-current', String(t === thumb)));
+      });
+    });
+  }
+</script>

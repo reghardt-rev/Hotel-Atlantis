@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import BookNow from '../components/BookNow.astro';
+import BookingBar from '../components/BookingBar.astro';
+import ScrollScenery from '../components/ScrollScenery.astro';
+import Carousel from '../components/Carousel.astro';
+import RoomCard from '../components/RoomCard.astro';
+import OfferCard from '../components/OfferCard.astro';
+import Benefits from '../components/sections/Benefits.astro';
+import Welcome from '../components/sections/Welcome.astro';
+import ActivitiesSection from '../components/sections/ActivitiesSection.astro';
+import LocationSection from '../components/sections/LocationSection.astro';
+import FaqSection from '../components/sections/FaqSection.astro';
+import ContactSection from '../components/sections/ContactSection.astro';
+import { listRooms, listOffers, getSettings, getHomepage } from '../lib/content';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const settings = await getSettings();
+const homepage = await getHomepage();
+const rooms = (await listRooms(locale)).slice(0, 6);
+const offers = await listOffers(locale);
+const mewsConfigId = settings?.mewsConfigId || undefined;
+const siteName = settings?.siteName || 'Hotel Paradis';
+const tagline = settings?.tagline || 'Vind uw oase in Hotel Paradis';
+
+const slides = (homepage?.carousel ?? [])
+  .map((s: any) => {
+    const img = typeof s.image === 'string' ? s.image : '';
+    const src = img.startsWith('/') || img.startsWith('http') ? img : `/images/carousel/${img}`;
+    return { image: src, alt: s.alt || siteName };
+  })
+  .filter((s: any) => s.image);
+---
+
+<Layout title={siteName} description={tagline} locale={locale} heroHeader={true}>
+  {/* Hero */}
+  {slides.length > 0 ? (
+    <Carousel slides={slides}>
+      <p class="hero-type text-xs uppercase tracking-[0.35em] text-white/90">{siteName}</p>
+      <h1 class="hero-type mt-5 max-w-3xl font-serif text-5xl leading-[1.05] sm:text-7xl">{tagline}</h1>
+      <BookingBar slot="bottom" locale={locale} />
+    </Carousel>
+  ) : (
+    <section class="flex min-h-[70vh] items-center justify-center bg-gradient-to-b from-sand to-paper px-4 text-center">
+      <div>
+        <p class="text-xs uppercase tracking-[0.35em] text-clay">{siteName}</p>
+        <h1 class="mt-5 font-serif text-5xl leading-tight sm:text-7xl">{tagline}</h1>
+        <div class="mt-9"><BookNow configId={mewsConfigId} label={tr.book} location="hero" class="!px-8 !py-3.5" /></div>
+      </div>
+    </section>
+  )}
+
+  <Benefits locale={locale} />
+
+  <Welcome locale={locale} />
+
+  {/* Rooms */}
+  {rooms.length > 0 && (
+    <section id="rooms" class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
+          <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
+        </div>
+        <a href={localePath(locale, '/rooms')} class="text-sm font-medium text-clay hover:underline">
+          {tr.allRooms} →
+        </a>
+      </div>
+      <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {rooms.map((room) => <RoomCard room={room} locale={locale} />)}
+      </div>
+    </section>
+  )}
+
+  {/* Offers */}
+  {offers.length > 0 && (
+    <section id="offers" class="bg-sand">
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
+        <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.offers}</p>
+        <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourOffers}</h2>
+        <div class="mt-10 grid gap-8 sm:grid-cols-2">
+          {offers.map((offer) => <OfferCard offer={offer} locale={locale} mewsConfigId={mewsConfigId} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <ActivitiesSection locale={locale} />
+
+  <LocationSection locale={locale} />
+
+  <FaqSection locale={locale} />
+
+  <ContactSection locale={locale} settings={settings} />
+
+  <ScrollScenery />
+</Layout>

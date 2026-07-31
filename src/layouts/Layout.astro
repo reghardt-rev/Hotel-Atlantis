@@ -1,0 +1,98 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PromoModal from '../components/PromoModal.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+import { getSettings } from '../lib/content';
+import { defaultLocale, type Locale } from '../lib/i18n';
+
+interface Props {
+  title: string;
+  description?: string;
+  locale?: Locale;
+  /** True on pages whose hero sits behind a transparent header (the homepage). */
+  heroHeader?: boolean;
+}
+const { title, description = '', locale = defaultLocale, heroHeader = false } = Astro.props;
+
+const settings = await getSettings();
+const siteName = settings?.siteName || 'Hotel Paradis';
+const mewsConfigId = settings?.mewsConfigId || undefined;
+const gtmId = (settings?.gtmContainerId || import.meta.env.PUBLIC_GTM_ID || '').trim();
+const ga4Id = (settings?.ga4MeasurementId || import.meta.env.PUBLIC_GA4_ID || '').trim();
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* One 512px source for every context; browsers downscale as needed. */}
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#8a5a44" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} · {siteName}</title>
+    {description && <meta name="description" content={description} />}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    {/* Exposes the GTM id to the Mews booking widget (see BookNow.astro) */}
+    {gtmId && <meta name="mews-gtm" content={gtmId} />}
+
+    {/* Google Consent Mode v2 defaults. MUST stay above gtag.js and GTM: consent
+        state has to exist before either loads, or they set analytics cookies
+        before the visitor has been asked. A stored choice is replayed here so
+        returning visitors are not re-prompted and are not tracked while the
+        banner script is still loading. */}
+    {(ga4Id || gtmId) && (
+      <script
+        is:inline
+        set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});
+try{var c=JSON.parse(localStorage.getItem('paradis-consent')||'null');if(c&&c.analytics===true){gtag('consent','update',{analytics_storage:'granted'});}}catch(e){}`}
+      />
+    )}
+
+    {/* Google tag (gtag.js) — GA4 loaded directly, on every page. */}
+    {ga4Id && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`} />
+        <script
+          is:inline
+          set:html={`window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '${ga4Id}');`}
+        />
+      </>
+    )}
+
+    {/* Google Tag Manager */}
+    {gtmId && (
+      <script
+        is:inline
+        set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`}
+      />
+    )}
+  </head>
+  <body class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
+    {gtmId && (
+      <noscript
+        set:html={`<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`}
+      />
+    )}
+
+    <Header locale={locale} siteName={siteName} mewsConfigId={mewsConfigId} overHero={heroHeader} />
+    <main class:list={['flex-1', !heroHeader && 'pt-28']}>
+      <slot />
+    </main>
+    <Footer locale={locale} settings={settings} />
+    <PromoModal locale={locale} mewsConfigId={mewsConfigId} />
+    <CookieBanner locale={locale} />
+  </body>
+</html>
