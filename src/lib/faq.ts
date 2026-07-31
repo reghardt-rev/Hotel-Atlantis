@@ -65,9 +65,9 @@ export const faqCategories: FaqCategory[] = [
       {
         q: { en: 'Do you serve breakfast?', nl: 'Serveren jullie ontbijt?', de: 'Servieren Sie Frühstück?' },
         a: {
-          en: "Yes — order our 'Paradis' breakfast a day ahead and it's ready for you from 08:30.",
-          nl: "Ja — bestel ons 'Paradis'-ontbijt een dag van tevoren en het staat vanaf 08:30 uur voor u klaar.",
-          de: "Ja — bestellen Sie unser 'Paradis'-Frühstück einen Tag im Voraus, und es steht ab 08:30 Uhr für Sie bereit.",
+          en: "Yes — order our 'Atlantis' breakfast a day ahead and it's ready for you from 08:30.",
+          nl: "Ja — bestel ons 'Atlantis'-ontbijt een dag van tevoren en het staat vanaf 08:30 uur voor u klaar.",
+          de: "Ja — bestellen Sie unser 'Atlantis'-Frühstück einen Tag im Voraus, und es steht ab 08:30 Uhr für Sie bereit.",
         },
       },
       {
@@ -85,9 +85,9 @@ export const faqCategories: FaqCategory[] = [
       {
         q: { en: 'Can I rent a bike?', nl: 'Kan ik een fiets huren?', de: 'Kann ich ein Fahrrad leihen?' },
         a: {
-          en: "Rent our 'Paradis' bike for €15 a day and explore Zandvoort and the dunes. Reserve at reception.",
-          nl: "Huur onze 'Paradis'-fiets voor €15 per dag en ontdek Zandvoort en de duinen. Reserveer bij de receptie.",
-          de: "Leihen Sie unser 'Paradis'-Fahrrad für €15 pro Tag und entdecken Sie Zandvoort und die Dünen. Reservieren Sie an der Rezeption.",
+          en: "Rent our 'Atlantis' bike for €15 a day and explore Zandvoort and the dunes. Reserve at reception.",
+          nl: "Huur onze 'Atlantis'-fiets voor €15 per dag en ontdek Zandvoort en de duinen. Reserveer bij de receptie.",
+          de: "Leihen Sie unser 'Atlantis'-Fahrrad für €15 pro Tag und entdecken Sie Zandvoort und die Dünen. Reservieren Sie an der Rezeption.",
         },
       },
       {

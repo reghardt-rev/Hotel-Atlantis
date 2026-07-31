@@ -1,4 +1,4 @@
-// Warm "clay" photo treatment for Hotel Paradis.
+// Warm "clay" photo treatment for Hotel Atlantis.
 // Applies a warm channel grade + gentle saturation + a warm darkened-edge
 // vignette, so photography sits cohesively with the site's clay accent.
 //

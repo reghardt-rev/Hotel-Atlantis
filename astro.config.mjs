@@ -17,7 +17,7 @@ export default defineConfig({
   // Canonical URLs and sitemaps are built from this. Points at the live Workers
   // URL; change it the moment a hotel domain is attached, or search engines keep
   // attributing the site to workers.dev.
-  site: 'https://paradis-zan.reghardt.workers.dev',
+  site: 'https://hotel-atlantis.reghardt.workers.dev',
 
   // English is the default (no URL prefix); Dutch is served under /nl/*.
   i18n: {

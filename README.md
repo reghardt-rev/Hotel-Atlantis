@@ -1,6 +1,6 @@
-# Hotel Paradis
+# Hotel Atlantis
 
-Marketing website for Hotel Paradis. Static, multilingual, edited through a Git‑backed CMS, with the Mews booking engine and Google Tag Manager.
+Marketing website for Hotel Atlantis. Static, multilingual, edited through a Git‑backed CMS, with the Mews booking engine and Google Tag Manager.
 
 ## Stack
 
@@ -40,7 +40,7 @@ The Astro CLI supervises the dev server in the background: `astro dev status`, `
 Open **`/keystatic`**.
 
 - **In development** the CMS uses **local storage**: your edits write directly to the files under `src/content/` and you commit them yourself. No GitHub App needed.
-- **In production** it uses **GitHub storage** (repo `reghardt-rev/Paradis-ZAN`): staff sign in with GitHub and edits are committed to the repo automatically, which triggers a rebuild.
+- **In production** it uses **GitHub storage** (repo `reghardt-rev/Hotel-Atlantis`): staff sign in with GitHub and edits are committed to the repo automatically, which triggers a rebuild.
 
 The switch is `import.meta.env.DEV` in `keystatic.config.ts`.
 
@@ -51,7 +51,7 @@ The switch is `import.meta.env.DEV` in `keystatic.config.ts`.
 3. It gives you three values — add them as environment variables on the host (see `.env.example`):
    `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`.
 
-> **Transferring the repo later:** change `repo: 'reghardt-rev/Paradis-ZAN'` in `keystatic.config.ts`, and update the GitHub App’s callback URL only if the domain changes.
+> **Transferring the repo later:** change `repo: 'reghardt-rev/Hotel-Atlantis'` in `keystatic.config.ts`, and update the GitHub App’s callback URL only if the domain changes.
 
 ### Content model
 
@@ -84,7 +84,7 @@ Set the **GTM container ID** in **Site settings** (or `PUBLIC_GTM_ID` in `.env`)
 
 The build targets **Cloudflare Workers with static assets** (`@astrojs/cloudflare`). `wrangler.jsonc` already sets `nodejs_compat`, required by Keystatic.
 
-**Option A — connect the repo (recommended):** in the Cloudflare dashboard, create a Workers/Pages project from `reghardt-rev/Paradis-ZAN`, framework preset **Astro**, build command `npm run build`. Add the `KEYSTATIC_GITHUB_*`, `KEYSTATIC_SECRET`, and (optionally) `PUBLIC_GTM_ID` environment variables.
+**Option A — connect the repo (recommended):** in the Cloudflare dashboard, create a Workers/Pages project from `reghardt-rev/Hotel-Atlantis`, framework preset **Astro**, build command `npm run build`. Add the `KEYSTATIC_GITHUB_*`, `KEYSTATIC_SECRET`, and (optionally) `PUBLIC_GTM_ID` environment variables.
 
 **Option B — manual:** `npm run build && npx wrangler deploy`.
 

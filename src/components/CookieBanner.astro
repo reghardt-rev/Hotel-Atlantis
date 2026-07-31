@@ -54,7 +54,7 @@ const tr = t(locale);
 </div>
 
 <script>
-  const KEY = 'paradis-consent';
+  const KEY = 'atlantis-consent';
   const banner = document.querySelector<HTMLElement>('[data-cookie-banner]');
 
   if (banner) {
@@ -82,7 +82,7 @@ const tr = t(locale);
       }
       banner.hidden = true;
       // Lets the promo modal know it can take the screen now.
-      window.dispatchEvent(new CustomEvent('paradis:consent', { detail: { analytics } }));
+      window.dispatchEvent(new CustomEvent('atlantis:consent', { detail: { analytics } }));
     }
 
     banner.querySelector('[data-cookie-accept]')?.addEventListener('click', () => decide(true));

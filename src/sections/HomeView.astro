@@ -26,8 +26,8 @@ const homepage = await getHomepage();
 const rooms = (await listRooms(locale)).slice(0, 6);
 const offers = await listOffers(locale);
 const mewsConfigId = settings?.mewsConfigId || undefined;
-const siteName = settings?.siteName || 'Hotel Paradis';
-const tagline = settings?.tagline || 'Vind uw oase in Hotel Paradis';
+const siteName = settings?.siteName || 'Hotel Atlantis';
+const tagline = settings?.tagline || 'Vind uw oase in Hotel Atlantis';
 
 const slides = (homepage?.carousel ?? [])
   .map((s: any) => {

@@ -78,7 +78,7 @@ const offers = await listOffers(locale);
   const promo = document.querySelector<HTMLElement>('[data-promo]');
 
   if (promo) {
-    const KEY = 'paradis-promo-seen';
+    const KEY = 'atlantis-promo-seen';
     const delay = Number(promo.dataset.delay) || 10000;
     const closeBtn = promo.querySelector<HTMLButtonElement>('[data-promo-close]');
     let restoreFocus: HTMLElement | null = null;
@@ -119,7 +119,7 @@ const offers = await listOffers(locale);
     // them to, then show the promo.
     const consentPending = () => {
       try {
-        return localStorage.getItem('paradis-consent') === null;
+        return localStorage.getItem('atlantis-consent') === null;
       } catch {
         return false;
       }
@@ -128,7 +128,7 @@ const offers = await listOffers(locale);
     if (!seen()) {
       setTimeout(() => {
         if (consentPending()) {
-          window.addEventListener('paradis:consent', () => setTimeout(open, 600), { once: true });
+          window.addEventListener('atlantis:consent', () => setTimeout(open, 600), { once: true });
         } else {
           open();
         }

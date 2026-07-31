@@ -1,12 +1,12 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
 
 /**
- * Keystatic content configuration for Hotel Paradis.
+ * Keystatic content configuration for Hotel Atlantis.
  *
  * Storage:
  *   - Local dev  -> `local` (edit content on your machine, no GitHub App needed).
  *   - Production -> `github` (staff log in at /keystatic with GitHub; edits are
- *                   committed to reghardt-rev/Paradis-ZAN automatically).
+ *                   committed to reghardt-rev/Hotel-Atlantis automatically).
  *   When you transfer the repo to an org later, update `repo` below and, if the
  *   domain changes, the callback URL on the GitHub App.
  *
@@ -195,10 +195,10 @@ function galleryCollection(locale: Locale) {
 export default config({
   storage: import.meta.env.DEV
     ? { kind: 'local' }
-    : { kind: 'github', repo: 'reghardt-rev/Paradis-ZAN' },
+    : { kind: 'github', repo: 'reghardt-rev/Hotel-Atlantis' },
 
   ui: {
-    brand: { name: 'Hotel Paradis' },
+    brand: { name: 'Hotel Atlantis' },
     navigation: {
       Settings: ['settings', 'homepage'],
       Shared: ['roomPhotos'],
@@ -213,7 +213,7 @@ export default config({
       label: 'Site settings',
       path: 'src/content/settings/site',
       schema: {
-        siteName: fields.text({ label: 'Site name', defaultValue: 'Hotel Paradis' }),
+        siteName: fields.text({ label: 'Site name', defaultValue: 'Hotel Atlantis' }),
         tagline: fields.text({ label: 'Tagline', multiline: true }),
         mewsConfigId: fields.text({
           label: 'Mews Distributor configuration ID',

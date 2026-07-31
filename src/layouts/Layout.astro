@@ -17,7 +17,7 @@ interface Props {
 const { title, description = '', locale = defaultLocale, heroHeader = false } = Astro.props;
 
 const settings = await getSettings();
-const siteName = settings?.siteName || 'Hotel Paradis';
+const siteName = settings?.siteName || 'Hotel Atlantis';
 const mewsConfigId = settings?.mewsConfigId || undefined;
 const gtmId = (settings?.gtmContainerId || import.meta.env.PUBLIC_GTM_ID || '').trim();
 const ga4Id = (settings?.ga4MeasurementId || import.meta.env.PUBLIC_GA4_ID || '').trim();
@@ -57,7 +57,7 @@ const ga4Id = (settings?.ga4MeasurementId || import.meta.env.PUBLIC_GA4_ID || ''
         is:inline
         set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});
-try{var c=JSON.parse(localStorage.getItem('paradis-consent')||'null');if(c&&c.analytics===true){gtag('consent','update',{analytics_storage:'granted'});}}catch(e){}`}
+try{var c=JSON.parse(localStorage.getItem('atlantis-consent')||'null');if(c&&c.analytics===true){gtag('consent','update',{analytics_storage:'granted'});}}catch(e){}`}
       />
     )}
 

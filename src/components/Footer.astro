@@ -8,7 +8,7 @@ interface Props {
 const { locale, settings } = Astro.props;
 const tr = t(locale);
 const year = new Date().getFullYear();
-const siteName = settings?.siteName ?? 'Hotel Paradis';
+const siteName = settings?.siteName ?? 'Hotel Atlantis';
 const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: tr.nav[id] }));
 ---
 

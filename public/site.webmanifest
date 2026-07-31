@@ -1,6 +1,6 @@
 {
-  "name": "Hotel Paradis",
-  "short_name": "Paradis",
+  "name": "Hotel Atlantis",
+  "short_name": "Atlantis",
   "icons": [
     { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ],
