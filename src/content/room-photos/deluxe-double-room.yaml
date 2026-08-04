@@ -1,0 +1,15 @@
+name: Deluxe Double Room with Balcony
+heroImage: /images/rooms/deluxe-double-room/heroImage.jpg
+images:
+  - image: /images/rooms/deluxe-double-room/images/0/image.jpg
+    alt: 'A double bed beside open balcony doors'
+  - image: /images/rooms/deluxe-double-room/images/1/image.jpg
+    alt: 'The balcony doors open onto two chairs and the trees beyond'
+  - image: /images/rooms/deluxe-double-room/images/2/image.jpg
+    alt: 'The armchair, wardrobe and balcony'
+  - image: /images/rooms/deluxe-double-room/images/3/image.jpg
+    alt: 'The bed, television and balcony doors'
+  - image: /images/rooms/deluxe-double-room/images/4/image.jpg
+    alt: 'The private balcony with two chairs'
+  - image: /images/rooms/deluxe-double-room/images/5/image.jpg
+    alt: 'The private bathroom with a rounded shower'

@@ -1,7 +1,9 @@
 carousel:
   - image: /images/carousel/carousel/0/image.jpg
-    alt: Outside christmas
+    alt: The front of Hotel Atlantis on Ceintuurbaan
   - image: /images/carousel/carousel/1/image.jpg
-    alt: A guest room at Hotel Atlantis
+    alt: Ceintuurbaan and its plane trees, seen from the hotel
   - image: /images/carousel/carousel/2/image.jpg
-    alt: A bright studio at Hotel Atlantis
+    alt: The breakfast room looking out onto the street
+  - image: /images/carousel/carousel/3/image.jpg
+    alt: A deluxe double room with its balcony doors open

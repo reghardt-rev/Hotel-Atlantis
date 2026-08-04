@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Hotel Atlantis">
+  <!-- Capital A on a transparent ground, in the site accent blue (--color-clay).
+       Drawn as strokes rather than <text> so it renders identically everywhere:
+       an SVG favicon carrying a <text> element depends on the font being present
+       on the viewer's machine, which for a tab icon it very often is not. -->
+  <g fill="none" stroke="#0a63d9" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 85 L50 17 L82 85" />
+    <path d="M31 63 H69" />
+  </g>
+</svg>

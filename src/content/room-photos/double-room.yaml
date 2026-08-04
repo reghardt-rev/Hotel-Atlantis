@@ -1,0 +1,15 @@
+name: Double Room
+heroImage: /images/rooms/double-room/heroImage.jpg
+images:
+  - image: /images/rooms/double-room/images/0/image.jpg
+    alt: 'A double bed beneath two tall windows over Ceintuurbaan'
+  - image: /images/rooms/double-room/images/1/image.jpg
+    alt: 'The double bed and desk with the coffee machine'
+  - image: /images/rooms/double-room/images/2/image.jpg
+    alt: 'The bed beside the window looking onto the street'
+  - image: /images/rooms/double-room/images/3/image.jpg
+    alt: 'The room looking towards the bathroom'
+  - image: /images/rooms/double-room/images/4/image.jpg
+    alt: 'The wardrobe, mirror and television'
+  - image: /images/rooms/double-room/images/5/image.jpg
+    alt: 'The private bathroom with a walk-in shower'

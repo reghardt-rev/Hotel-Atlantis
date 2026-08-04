@@ -1,0 +1,11 @@
+name: Triple Room
+heroImage: /images/rooms/triple-room/heroImage.jpg
+images:
+  - image: /images/rooms/triple-room/images/0/image.jpg
+    alt: 'A single bed and a double bed under a skylight'
+  - image: /images/rooms/triple-room/images/1/image.jpg
+    alt: 'The two beds, coffee station and television'
+  - image: /images/rooms/triple-room/images/2/image.jpg
+    alt: 'The private bathroom with a walk-in shower'
+  - image: /images/rooms/triple-room/images/3/image.jpg
+    alt: 'Pillows and a folded throw on the bed'

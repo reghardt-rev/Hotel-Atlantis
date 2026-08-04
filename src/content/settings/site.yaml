@@ -1,12 +1,14 @@
 siteName: Hotel Atlantis
-tagline: Sit back, relax and enjoy
-mewsConfigId: 4808678c-b67e-44bf-ad85-ae2800f64c7f
-gtmContainerId: GTM-MMGRQ6DS
-ga4MeasurementId: G-P3MPE9WLYQ
-email: reservations@hotelatlantis.example
-phone: +31 20 000 0000
+tagline: See the city as a local
+reviewScore: 7.4
+reviewCount: 3330
+reviewSource: Booking.com
+mewsConfigId: 134994b4-22c4-48b7-9740-afb700a2d280
+gtmContainerId: GTM-PXH35MWM
+email: info@hotelatlantisamsterdam.com
+phone: +31 20 3640034
 address: |-
-  Paradijsweg 2
-  2042 GC Zandvoort
+  Ceintuurbaan 215-217
+  1074 CV Amsterdam
   Netherlands
 social: {}

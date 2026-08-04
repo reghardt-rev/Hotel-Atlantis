@@ -1,0 +1,85 @@
+---
+/**
+ * Guest review score over the hero, in the same translucent glass as the
+ * booking bar so the two read as one system.
+ *
+ * The figures live in Site settings rather than in this file: a review score
+ * moves every week, and it should be editable in Keystatic without a deploy.
+ * The component renders nothing at all if the score is missing, so an empty
+ * settings field simply removes the box.
+ *
+ * Booking.com publishes scores out of 10. The stars show the same number on a
+ * 5-point scale rather than a second, different rating.
+ */
+import { t, localeTags, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  score?: number | null;
+  reviews?: number | null;
+  source?: string | null;
+  class?: string;
+}
+const { locale, score, reviews, source, class: className = '' } = Astro.props;
+const tr = t(locale);
+
+const tag = localeTags[locale];
+const fmtScore = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtCount = new Intl.NumberFormat(tag);
+
+const filled = score == null ? 0 : Math.max(0, Math.min(5, score / 2));
+// Unique per render so several of these on one page cannot collide on gradient ids.
+const uid = 'rs' + Math.random().toString(36).slice(2, 8);
+
+const scoreText = score == null ? '' : fmtScore.format(score);
+const countText = reviews == null ? '' : fmtCount.format(reviews);
+const label = [
+  scoreText && `${scoreText}/10`,
+  countText && `${countText} ${tr.reviewsLabel}`,
+  source && `${tr.reviewsOn} ${source}`,
+]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+{score != null && (
+  <div
+    class:list={[
+      'rounded-2xl bg-white/10 px-4 py-3 shadow-xl ring-1 ring-white/20 backdrop-blur-md',
+      className,
+    ]}
+    role="img"
+    aria-label={label}
+  >
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-0.5 text-white" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => {
+          const pct = Math.round(Math.max(0, Math.min(1, filled - i)) * 100);
+          return (
+            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" focusable="false">
+              <defs>
+                <linearGradient id={`${uid}-${i}`} x1="0" x2="1" y1="0" y2="0">
+                  <stop offset={`${pct}%`} stop-color="currentColor" />
+                  <stop offset={`${pct}%`} stop-color="currentColor" stop-opacity="0.25" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M10 1.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.88l-5.2 2.73.99-5.79-4.21-4.1 5.82-.85z"
+                fill={`url(#${uid}-${i})`}
+              />
+            </svg>
+          );
+        })}
+      </div>
+      <span class="text-sm font-medium leading-none text-white">{scoreText}</span>
+    </div>
+
+    {(countText || source) && (
+      <p class="mt-1.5 text-[0.65rem] font-medium uppercase tracking-[0.16em] text-white/80" aria-hidden="true">
+        {countText && `${countText} ${tr.reviewsLabel}`}
+        {countText && source ? ' · ' : ''}
+        {source}
+      </p>
+    )}
+  </div>
+)}

@@ -25,7 +25,7 @@ export function formatDate(locale: Locale, value?: string | null): string {
 
 export const ui = {
   en: {
-    nav: { rooms: 'Rooms', offers: 'Offers', activities: 'Activities', location: 'Zandvoort', contact: 'Contact' },
+    nav: { rooms: 'Rooms', offers: 'Offers', activities: 'Activities', location: 'Amsterdam', contact: 'Contact' },
     book: 'Book now',
     bookDirect: 'Book direct for our best rate',
     from: 'From',
@@ -43,6 +43,8 @@ export const ui = {
     sizeLabel: 'Size',
     bedLabel: 'Bed',
     backToRooms: '← All rooms',
+    reviewsLabel: 'reviews',
+    reviewsOn: 'on',
     booking: {
       arrival: 'Arrival',
       departure: 'Departure',
@@ -66,7 +68,7 @@ export const ui = {
     privacy: 'Privacy',
   },
   nl: {
-    nav: { rooms: 'Kamers', offers: 'Aanbiedingen', activities: 'Activiteiten', location: 'Zandvoort', contact: 'Contact' },
+    nav: { rooms: 'Kamers', offers: 'Aanbiedingen', activities: 'Activiteiten', location: 'Amsterdam', contact: 'Contact' },
     book: 'Nu boeken',
     bookDirect: 'Boek direct voor de beste prijs',
     from: 'Vanaf',
@@ -84,6 +86,8 @@ export const ui = {
     sizeLabel: 'Grootte',
     bedLabel: 'Bed',
     backToRooms: '← Alle kamers',
+    reviewsLabel: 'beoordelingen',
+    reviewsOn: 'op',
     booking: {
       arrival: 'Aankomst',
       departure: 'Vertrek',
@@ -107,7 +111,7 @@ export const ui = {
     privacy: 'Privacy',
   },
   de: {
-    nav: { rooms: 'Zimmer', offers: 'Angebote', activities: 'Aktivitäten', location: 'Zandvoort', contact: 'Kontakt' },
+    nav: { rooms: 'Zimmer', offers: 'Angebote', activities: 'Aktivitäten', location: 'Amsterdam', contact: 'Kontakt' },
     book: 'Jetzt buchen',
     bookDirect: 'Direkt buchen zum besten Preis',
     from: 'Ab',
@@ -125,6 +129,8 @@ export const ui = {
     sizeLabel: 'Größe',
     bedLabel: 'Bett',
     backToRooms: '← Alle Zimmer',
+    reviewsLabel: 'Bewertungen',
+    reviewsOn: 'auf',
     booking: {
       arrival: 'Anreise',
       departure: 'Abreise',

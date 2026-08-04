@@ -1,9 +1,0 @@
-name: Small Double Room
-heroImage: /images/rooms/small-double/heroImage.jpg
-images:
-  - image: /images/rooms/small-double/images/0/image.jpg
-    alt: '2'
-  - image: /images/rooms/small-double/images/1/image.jpg
-    alt: '3'
-  - image: /images/rooms/small-double/images/2/image.jpg
-    alt: '4'

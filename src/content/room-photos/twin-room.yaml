@@ -1,0 +1,11 @@
+name: Twin Room
+heroImage: /images/rooms/twin-room/heroImage.jpg
+images:
+  - image: /images/rooms/twin-room/images/0/image.jpg
+    alt: 'A single bed against patterned wallpaper in a Twin Room'
+  - image: /images/rooms/twin-room/images/1/image.jpg
+    alt: 'The private bathroom with a corner shower'
+  - image: /images/rooms/twin-room/images/2/image.jpg
+    alt: 'The in-room coffee machine and cups'
+  - image: /images/rooms/twin-room/images/3/image.jpg
+    alt: 'Pillows and a folded throw on the bed'

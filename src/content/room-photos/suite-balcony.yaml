@@ -1,9 +1,0 @@
-name: "Suite with Balcony"
-heroImage: "/images/rooms/suite/hero.jpg"
-images:
-  - image: "/images/rooms/suite/photo-2.jpg"
-    alt: "The balcony looking over the courtyard"
-  - image: "/images/rooms/suite/photo-3.jpg"
-    alt: "Sitting area by the window"
-  - image: "/images/rooms/suite/photo-4.jpg"
-    alt: "En-suite bathroom"

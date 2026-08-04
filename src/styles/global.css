@@ -1,17 +1,24 @@
 @import "tailwindcss";
 
-/* ---- Design tokens (Mooirivier-inspired: neutral paper, ink, earthy clay) ---- */
+/* ---- Design tokens (city blue: cool paper, navy ink, vibrant azure) ---------
+   The token *names* are inherited from the warm seaside palette this replaced,
+   so read them as roles rather than colours: `clay` is the accent, `sand` and
+   `stone-warm` are the two tinted surfaces. Every value below is now blue.
+
+   Contrast against `paper`: ink 16.4:1, clay 5.2:1, muted 6.1:1. White on clay
+   is 5.5:1, so accent buttons keep their white type. Check any new pairing
+   before adding it, especially `muted` on `stone-warm`, the tightest at 4.7:1. */
 @theme {
   --font-sans: "Jost", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, "Times New Roman", serif;
 
-  --color-paper: #faf8f5;
-  --color-ink: #201c19;
-  --color-clay: #8a5a44;
-  --color-clay-dark: #6f4835;
-  --color-sand: #efe9e1;
-  --color-stone-warm: #e7e0d6;
-  --color-muted: #766e66;
+  --color-paper: #f5f9ff;
+  --color-ink: #0d1b2e;
+  --color-clay: #0a63d9;
+  --color-clay-dark: #0848a6;
+  --color-sand: #e2edfb;
+  --color-stone-warm: #cadff5;
+  --color-muted: #4e6076;
 }
 
 html {
@@ -61,113 +68,75 @@ section[id] {
     );
 }
 
-/* ---- Scroll scenery ---------------------------------------------------------
-   Two independent pieces on the homepage:
+/* ---- City scenery -----------------------------------------------------------
+   A row of Amsterdam canal houses in each side gutter, drawn once in
+   CityScenery.astro and mirrored on the right so both rows face outward.
 
-   1. A wave that washes over the whole page as you leave the hero. It is driven
-      by scroll *position*, so it sweeps up and off the top as you descend and
-      runs back down if you scroll up again. Full width, so unlike an edge
-      decoration it works at every screen size.
-   2. A sun in the right-hand gutter, high when you arrive and set at the foot of
-      the page. Sized to the gutter beside the 72rem content column so it can
-      never sit on top of body text, and hidden once that gutter is too narrow.
+   Sized to the gutter beside the 72rem content column so it can never sit on top
+   of body text, and hidden once that gutter is too narrow to hold it. Fixed and
+   pointer-events:none, and sits above the section backgrounds (several are
+   opaque) rather than behind them.
 
-   Both are fixed and pointer-events:none, and sit above the section backgrounds
-   (several are opaque) rather than behind them.                              */
+   The mirror lives on the outer element and the scroll lift on the inner one, so
+   the two transforms never overwrite each other.                             */
 
-.wash {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
-}
-.wash[data-active] {
-  visibility: visible;
-}
-
-/* Crest at the top, water filling below it; the whole thing is translated from
-   below the fold to above it across the wash window. */
-.wash__body {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  height: 140vh;
-  transform: translate3d(0, calc(100vh - var(--wash-p, 0) * 240vh), 0);
-  will-change: transform;
-}
-.wash__crest {
-  height: 110px;
-  flex: none;
-  background-repeat: no-repeat;
-  background-size: 100% 110px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1440' height='120' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cpath d='M0,58 C240,8 480,108 720,58 C960,8 1200,108 1440,58 L1440,120 L0,120 Z' fill='%233f86ad' fill-opacity='0.2'/%3E%3Cpath d='M0,58 C240,8 480,108 720,58 C960,8 1200,108 1440,58' fill='none' stroke='%23eaf6fb' stroke-opacity='0.75' stroke-width='4'/%3E%3C/svg%3E");
-}
-/* Fades out downward so it reads as a wash passing over the page rather than a
-   flat panel. The top stop must match the crest path's fill or a seam shows at
-   the join. A flat fill also turns grey over the warm sand sections: blue at low
-   alpha over #efe9e1 neutralises, so the tint is kept in the upper band where
-   the crest gives it context. */
-.wash__water {
-  flex: 1;
-  background: linear-gradient(
-    to bottom,
-    rgba(63, 134, 173, 0.2) 0%,
-    rgba(63, 134, 173, 0.12) 32%,
-    rgba(63, 134, 173, 0) 100%
-  );
-}
-
-.scenery {
+.city {
   --gutter: max(0px, calc((100vw - 72rem) / 2));
+  --strip: min(216px, var(--gutter));
   position: fixed;
-  inset: 0;
+  bottom: 0;
   z-index: 30;
+  width: var(--strip);
+  color: var(--color-ink);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.7s ease;
+  transition: opacity 0.9s ease;
 }
-.scenery[data-visible] {
-  opacity: 1;
+.city[data-visible] {
+  opacity: 0.34;
 }
+.city--left {
+  left: calc((var(--gutter) - var(--strip)) / 2);
+}
+.city--right {
+  right: calc((var(--gutter) - var(--strip)) / 2);
+  transform: scaleX(-1);
+}
+
+/* Below this the gutter is too narrow for the houses to clear the text. */
 @media (max-width: 1279px) {
-  .scenery {
+  .city {
     display: none;
   }
 }
 
-.scenery-sun {
-  position: absolute;
-  right: max(8px, calc((var(--gutter) - 92px) / 2));
-  bottom: -72px;
-  width: 92px;
-  height: 92px;
-  opacity: 0.65;
-  transform: translate3d(0, calc(var(--sun-t, 0) * -62vh), 0);
+/* Rooflines sit low on arrival and lift into place as you leave the hero. */
+.city__row {
+  transform: translate3d(0, calc((1 - var(--city-t, 0)) * 34px), 0);
   will-change: transform;
 }
-.scenery-sun span {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
+
+.city svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
-/* Low sun is warm and heavily hazed; high sun is paler and cleaner. */
-.scenery-sun__glow {
-  inset: -55% !important;
-  background: radial-gradient(circle, rgba(201, 122, 66, 0.5), rgba(201, 122, 66, 0) 68%);
-  opacity: calc(1 - var(--sun-t, 0) * 0.55);
+
+/* Facades and windows carry a wash of fill so the row reads as masonry rather
+   than wireframe; everything else stays pure line. */
+.city svg .city__face {
+  fill: currentColor;
+  fill-opacity: 0.07;
 }
-.scenery-sun__warm {
-  background: radial-gradient(circle at 50% 45%, #dd9a5c, #bb6a34 72%);
-  opacity: calc(1 - var(--sun-t, 0));
-}
-.scenery-sun__pale {
-  background: radial-gradient(circle at 50% 45%, #f2cf95, #dfa662 72%);
-  opacity: var(--sun-t, 0);
+.city svg .city__win {
+  fill: currentColor;
+  fill-opacity: 0.16;
+  stroke-width: 1.1;
 }
 
 /* ---- Direct-booking promo --------------------------------------------------- */
@@ -198,7 +167,7 @@ section[id] {
 /* Denser than the bar itself: a grid of small dates needs the photo held back
    further than a row of large labels does. */
 .cal-panel {
-  background: rgba(32, 28, 25, 0.96);
+  background: rgba(13, 27, 46, 0.96);
 }
 
 .cal-month-title {
@@ -309,7 +278,7 @@ section[id] {
 .site-header.is-hero[data-scrolled] {
   background-color: var(--color-paper);
   color: var(--color-ink);
-  box-shadow: 0 1px 0 rgba(32, 28, 25, 0.08);
+  box-shadow: 0 1px 0 rgba(13, 27, 46, 0.08);
 }
 .site-header:not(.is-hero)::before,
 .site-header.is-hero[data-scrolled]::before {

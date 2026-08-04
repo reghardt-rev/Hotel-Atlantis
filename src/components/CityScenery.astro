@@ -1,0 +1,156 @@
+---
+/**
+ * Decorative city scenery for the homepage.
+ *
+ * A row of Amsterdam canal houses stands in each side gutter: a church tower on
+ * the outer edge, then the four classic gable types — step (trapgevel), bell
+ * (klokgevel), neck (halsgevel) and spout (tuitgevel). The right-hand row is the
+ * same drawing mirrored in CSS, so the two rows face outward from the content
+ * column and the whole thing is one asset rather than two.
+ *
+ * The rooflines lift a little as you scroll. Like the scenery it replaces, it is
+ * driven by scroll *position* rather than played as a one-shot animation, so
+ * scrolling back up runs it in reverse and it always matches where you are.
+ *
+ * Sized to the gutter beside the 72rem content column so it can never sit on top
+ * of body text, and hidden once that gutter is too narrow to hold it.
+ *
+ * Purely ornamental — aria-hidden and pointer-events:none, so it is invisible to
+ * assistive tech and can never swallow a click.
+ */
+
+// Drawn once and rendered twice. Coordinates run left to right across a
+// 210x340 box, with every facade sitting on the y=340 baseline.
+const skyline = `
+  <!-- Church tower on the outer edge -->
+  <path class="city__face" d="M4,340 L4,100 L34,100 L34,340 Z"/>
+  <rect class="city__face" x="1" y="93" width="36" height="8"/>
+  <rect class="city__face" x="8" y="58" width="22" height="35"/>
+  <path d="M12,66 L26,66 M12,74 L26,74 M12,82 L26,82"/>
+  <rect class="city__face" x="5" y="50" width="28" height="8"/>
+  <path class="city__face" d="M8,50 L19,14 L30,50 Z"/>
+  <path d="M19,14 L19,6"/>
+  <circle class="city__face" cx="19" cy="4" r="2.5"/>
+  <circle class="city__win" cx="19" cy="118" r="7"/>
+  <path d="M19,118 L19,113 M19,118 L22.5,120"/>
+  <rect class="city__win" x="13" y="150" width="12" height="24"/>
+  <rect class="city__win" x="13" y="196" width="12" height="24"/>
+  <rect class="city__win" x="13" y="242" width="12" height="24"/>
+  <path class="city__win" d="M9,340 L9,300 A10,10 0 0 1 29,300 L29,340"/>
+
+  <!-- Step gable (trapgevel) -->
+  <path class="city__face" d="M34,340 L34,158 L43,158 L43,144 L51,144 L51,130 L55,130 L55,118 L61,118 L61,130 L65,130 L65,144 L73,144 L73,158 L82,158 L82,340 Z"/>
+  <path d="M58,118 L58,128"/>
+  <circle cx="58" cy="130" r="2"/>
+  <rect class="city__win" x="43" y="172" width="11" height="22"/>
+  <rect class="city__win" x="62" y="172" width="11" height="22"/>
+  <rect class="city__win" x="43" y="210" width="11" height="22"/>
+  <rect class="city__win" x="62" y="210" width="11" height="22"/>
+  <rect class="city__win" x="43" y="248" width="11" height="22"/>
+  <rect class="city__win" x="62" y="248" width="11" height="22"/>
+  <rect class="city__win" x="51" y="294" width="14" height="46"/>
+
+  <!-- Bell gable (klokgevel) -->
+  <path class="city__face" d="M82,340 L82,182 C82,167 90,163 92,149 C94,135 98,129 104,129 C110,129 114,135 116,149 C118,163 126,167 126,182 L126,340 Z"/>
+  <rect class="city__face" x="96" y="122" width="16" height="7"/>
+  <rect class="city__win" x="89" y="196" width="12" height="22"/>
+  <rect class="city__win" x="106" y="196" width="12" height="22"/>
+  <rect class="city__win" x="89" y="234" width="12" height="22"/>
+  <rect class="city__win" x="106" y="234" width="12" height="22"/>
+  <rect class="city__win" x="89" y="272" width="12" height="22"/>
+  <rect class="city__win" x="106" y="272" width="12" height="22"/>
+  <rect class="city__win" x="97" y="298" width="15" height="42"/>
+
+  <!-- Neck gable (halsgevel) -->
+  <path class="city__face" d="M126,340 L126,188 C131,188 137,184 137,174 L137,138 L157,138 L157,174 C157,184 163,188 168,188 L168,340 Z"/>
+  <path class="city__face" d="M137,138 L147,126 L157,138 Z"/>
+  <rect class="city__win" x="142" y="146" width="10" height="20"/>
+  <rect class="city__win" x="133" y="202" width="11" height="22"/>
+  <rect class="city__win" x="150" y="202" width="11" height="22"/>
+  <rect class="city__win" x="133" y="240" width="11" height="22"/>
+  <rect class="city__win" x="150" y="240" width="11" height="22"/>
+  <rect class="city__win" x="133" y="278" width="11" height="22"/>
+  <rect class="city__win" x="150" y="278" width="11" height="22"/>
+  <rect class="city__win" x="140" y="302" width="14" height="38"/>
+
+  <!-- Spout gable (tuitgevel) -->
+  <path class="city__face" d="M168,340 L168,194 L182,154 L182,146 L196,146 L196,154 L210,194 L210,340 Z"/>
+  <path d="M189,154 L189,163"/>
+  <circle cx="189" cy="165" r="2"/>
+  <rect class="city__win" x="175" y="208" width="11" height="22"/>
+  <rect class="city__win" x="192" y="208" width="11" height="22"/>
+  <rect class="city__win" x="175" y="246" width="11" height="22"/>
+  <rect class="city__win" x="192" y="246" width="11" height="22"/>
+  <rect class="city__win" x="175" y="284" width="11" height="22"/>
+  <rect class="city__win" x="192" y="284" width="11" height="22"/>
+  <rect class="city__win" x="182" y="306" width="14" height="34"/>
+`;
+---
+
+<div class="city city--left" data-city aria-hidden="true">
+  <div class="city__row">
+    <svg viewBox="0 0 210 340" preserveAspectRatio="xMidYMax meet" role="presentation" focusable="false">
+      <Fragment set:html={skyline} />
+    </svg>
+  </div>
+</div>
+
+<div class="city city--right" data-city aria-hidden="true">
+  <div class="city__row">
+    <svg viewBox="0 0 210 340" preserveAspectRatio="xMidYMax meet" role="presentation" focusable="false">
+      <Fragment set:html={skyline} />
+    </svg>
+  </div>
+</div>
+
+<script>
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-city]'));
+
+  if (rows.length) {
+    const hero = document.querySelector<HTMLElement>('[data-carousel]');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (still) {
+      // Settled in place, never moving — the lift is exactly the kind of motion
+      // this setting asks us to drop.
+      for (const row of rows) {
+        row.style.setProperty('--city-t', '1');
+        row.toggleAttribute('data-visible', true);
+      }
+    } else {
+      let queued = false;
+      const clamp = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+
+      function frame() {
+        queued = false;
+        const y = window.scrollY;
+        const heroHeight = hero?.offsetHeight ?? window.innerHeight;
+
+        // The rooflines start low and lift as you leave the hero, settling once
+        // you are a viewport past it. Scrolling back up lowers them again.
+        const from = heroHeight * 0.55;
+        const to = from + window.innerHeight;
+        const t = clamp((y - from) / (to - from));
+
+        for (const row of rows) {
+          row.style.setProperty('--city-t', t.toFixed(4));
+          row.toggleAttribute('data-visible', y > from);
+        }
+      }
+
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!queued) {
+            queued = true;
+            requestAnimationFrame(frame);
+          }
+        },
+        { passive: true },
+      );
+
+      window.addEventListener('resize', frame, { passive: true });
+      frame();
+    }
+  }
+</script>

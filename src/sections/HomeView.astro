@@ -2,8 +2,9 @@
 import Layout from '../layouts/Layout.astro';
 import BookNow from '../components/BookNow.astro';
 import BookingBar from '../components/BookingBar.astro';
-import ScrollScenery from '../components/ScrollScenery.astro';
+import CityScenery from '../components/CityScenery.astro';
 import Carousel from '../components/Carousel.astro';
+import ReviewScore from '../components/ReviewScore.astro';
 import RoomCard from '../components/RoomCard.astro';
 import OfferCard from '../components/OfferCard.astro';
 import Benefits from '../components/sections/Benefits.astro';
@@ -27,7 +28,7 @@ const rooms = (await listRooms(locale)).slice(0, 6);
 const offers = await listOffers(locale);
 const mewsConfigId = settings?.mewsConfigId || undefined;
 const siteName = settings?.siteName || 'Hotel Atlantis';
-const tagline = settings?.tagline || 'Vind uw oase in Hotel Atlantis';
+const tagline = settings?.tagline || 'Sit back, relax and enjoy';
 
 const slides = (homepage?.carousel ?? [])
   .map((s: any) => {
@@ -44,6 +45,13 @@ const slides = (homepage?.carousel ?? [])
     <Carousel slides={slides}>
       <p class="hero-type text-xs uppercase tracking-[0.35em] text-white/90">{siteName}</p>
       <h1 class="hero-type mt-5 max-w-3xl font-serif text-5xl leading-[1.05] sm:text-7xl">{tagline}</h1>
+      <ReviewScore
+        slot="top-right"
+        locale={locale}
+        score={settings?.reviewScore}
+        reviews={settings?.reviewCount}
+        source={settings?.reviewSource}
+      />
       <BookingBar slot="bottom" locale={locale} />
     </Carousel>
   ) : (
@@ -99,5 +107,5 @@ const slides = (homepage?.carousel ?? [])
 
   <ContactSection locale={locale} settings={settings} />
 
-  <ScrollScenery />
+  <CityScenery />
 </Layout>

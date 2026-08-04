@@ -75,27 +75,27 @@ export const faqCategories: FaqCategory[] = [
         a: { en: 'Yes, free WiFi throughout the hotel.', nl: 'Ja, gratis wifi in het hele hotel.', de: 'Ja, kostenloses WLAN im gesamten Hotel.' },
       },
       {
-        q: { en: 'Can I bring my dog?', nl: 'Mag mijn hond mee?', de: 'Darf mein Hund mit?' },
+        q: { en: 'Are pets allowed?', nl: 'Zijn huisdieren toegestaan?', de: 'Sind Haustiere erlaubt?' },
         a: {
-          en: "Dogs are welcome (max 2 per room) for €25 per dog per night, including a small gift; you can borrow a water bowl. Dogs aren't allowed in the Small Double and Standard rooms.",
-          nl: 'Honden zijn welkom (max. 2 per kamer) voor €25 per hond per nacht, inclusief een klein cadeautje; een waterbak kunt u van ons lenen. Honden zijn niet toegestaan in de Kleine tweepersoonskamer en de Standaardkamers.',
-          de: 'Hunde sind willkommen (max. 2 pro Zimmer) für €25 pro Hund und Nacht, inklusive eines kleinen Geschenks; einen Wassernapf können Sie bei uns ausleihen. In den Kleinen Doppelzimmern und den Standardzimmern sind Hunde nicht erlaubt.',
+          en: 'Unfortunately not. The hotel is unable to accommodate pets of any kind.',
+          nl: 'Helaas niet. Het hotel kan geen huisdieren ontvangen.',
+          de: 'Leider nein. Das Hotel kann keine Haustiere aufnehmen.',
         },
       },
       {
         q: { en: 'Can I rent a bike?', nl: 'Kan ik een fiets huren?', de: 'Kann ich ein Fahrrad leihen?' },
         a: {
-          en: "Rent our 'Atlantis' bike for €15 a day and explore Zandvoort and the dunes. Reserve at reception.",
-          nl: "Huur onze 'Atlantis'-fiets voor €15 per dag en ontdek Zandvoort en de duinen. Reserveer bij de receptie.",
-          de: "Leihen Sie unser 'Atlantis'-Fahrrad für €15 pro Tag und entdecken Sie Zandvoort und die Dünen. Reservieren Sie an der Rezeption.",
+          en: 'Reception can arrange bike hire nearby, along with guided bike tours of the city. Just ask when you arrive.',
+          nl: 'De receptie regelt fietshuur in de buurt, en ook begeleide fietstochten door de stad. Vraag ernaar bij aankomst.',
+          de: 'Die Rezeption vermittelt Fahrradverleih in der Nähe sowie geführte Radtouren durch die Stadt. Fragen Sie einfach bei der Ankunft.',
         },
       },
       {
         q: { en: 'Is reception staffed around the clock?', nl: 'Is de receptie 24/7 bezet?', de: 'Ist die Rezeption rund um die Uhr besetzt?' },
         a: {
-          en: 'Reception is open 08:00–22:00; after that our night hostess is always reachable by phone or on call.',
-          nl: 'De receptie is open van 08:00 tot 22:00 uur; daarna is onze nachtgastvrouw altijd telefonisch of op afroep bereikbaar.',
-          de: 'Die Rezeption ist von 08:00 bis 22:00 Uhr geöffnet; danach ist unsere Nacht-Gastgeberin immer telefonisch oder auf Abruf erreichbar.',
+          en: 'Yes. Reception is staffed 24 hours a day, so there is always someone at the desk whatever time you arrive.',
+          nl: 'Ja. De receptie is 24 uur per dag bezet, dus er is altijd iemand aanwezig, hoe laat u ook aankomt.',
+          de: 'Ja. Die Rezeption ist rund um die Uhr besetzt, es ist also immer jemand da, wann immer Sie ankommen.',
         },
       },
       {
@@ -147,9 +147,9 @@ export const faqCategories: FaqCategory[] = [
       {
         q: { en: 'Is there a tourist tax?', nl: 'Is er toeristenbelasting?', de: 'Gibt es eine Kurtaxe?' },
         a: {
-          en: 'Zandvoort charges a tourist tax of €3.50 per person, per night, on top of the room rate.',
-          nl: 'Zandvoort rekent een toeristenbelasting van €3,50 per persoon, per nacht, bovenop de kamerprijs.',
-          de: 'Zandvoort erhebt eine Kurtaxe von €3,50 pro Person und Nacht, zusätzlich zum Zimmerpreis.',
+          en: 'Amsterdam charges a city tourist tax of 12.5% of the room rate, per night, on top of the rate shown.',
+          nl: 'Amsterdam rekent een toeristenbelasting van 12,5% van de kamerprijs, per nacht, bovenop de getoonde prijs.',
+          de: 'Amsterdam erhebt eine Touristensteuer von 12,5 % des Zimmerpreises pro Nacht, zusätzlich zum angezeigten Preis.',
         },
       },
       {

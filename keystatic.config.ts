@@ -215,6 +215,22 @@ export default config({
       schema: {
         siteName: fields.text({ label: 'Site name', defaultValue: 'Hotel Atlantis' }),
         tagline: fields.text({ label: 'Tagline', multiline: true }),
+        reviewScore: fields.number({
+          label: 'Guest review score',
+          description:
+            'Out of 10, as shown on Booking.com (e.g. 7.4). Shown over the hero with a matching star rating. Leave blank to hide the box entirely.',
+          validation: { isRequired: false },
+        }),
+        reviewCount: fields.integer({
+          label: 'Number of reviews',
+          description: 'The review count that goes with the score above.',
+          validation: { isRequired: false },
+        }),
+        reviewSource: fields.text({
+          label: 'Review source',
+          description: 'Credited under the score, e.g. Booking.com.',
+          validation: { isRequired: false },
+        }),
         mewsConfigId: fields.text({
           label: 'Mews Distributor configuration ID',
           description: 'Used by the Book Now button (Mews Booking Engine).',
