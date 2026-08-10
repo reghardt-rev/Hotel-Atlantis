@@ -10,69 +10,165 @@ interface Slide {
 }
 interface Props {
   slides: Slide[];
+  /** Variant B of the hero, when a split test is running. Empty means no test. */
+  slidesB?: Slide[];
   interval?: number;
 }
-const { slides, interval = 6000 } = Astro.props;
+const { slides, slidesB = [], interval = 6000 } = Astro.props;
+const testing = slidesB.length > 0;
+// The two arms need not be the same length, and only one survives in the DOM,
+// so enough dots are rendered for the longer set and the script trims the rest.
+const dotCount = Math.max(slides.length, slidesB.length);
 const hasBottom = Astro.slots.has('bottom');
 const hasTopRight = Astro.slots.has('top-right');
+const hasTopLeft = Astro.slots.has('top-left');
+
+// `Astro.slots.has` reports true whenever the caller mentions the slot at all,
+// including when the expression behind it rendered nothing — so the content is
+// rendered and measured rather than asked about. Otherwise switching the tagline
+// off in Keystatic leaves an empty wrapper still applying its bottom margin, and
+// a gap opens above the booking bar with nothing in it.
+const bottomLead = Astro.slots.has('bottom-lead')
+  ? (await Astro.slots.render('bottom-lead')).trim()
+  : '';
 ---
 
-<section class="relative isolate overflow-hidden" data-carousel data-interval={interval}>
+<section
+  class="relative isolate overflow-hidden"
+  data-carousel
+  data-interval={interval}
+  data-hero-test={testing ? "hero_photos" : undefined}
+>
   <div class="relative h-dvh w-full">
-    {slides.map((s, i) => (
-      <img
-        src={s.image}
-        alt={s.alt ?? ''}
-        data-slide
-        loading={i === 0 ? 'eager' : 'lazy'}
-        decoding="async"
-        class:list={[
-          'hero-photo absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out',
-          i === 0 ? 'opacity-100' : 'opacity-0',
-        ]}
-      />
-    ))}
+    {/* With a split test running neither set carries a `src`, so the browser
+        fetches only the arm the visitor is actually in. The script directly
+        below fills in the winner and deletes the other, and sits inline right
+        after the markup so the first photograph starts loading immediately
+        rather than waiting on a module. Without a test the images are plain
+        `src` again and nothing here applies. */}
+    {[
+      { set: slides, variant: 'a' },
+      { set: slidesB, variant: 'b' },
+    ].map(({ set, variant }) =>
+      set.map((s, i) => (
+        <img
+          src={testing ? undefined : s.image}
+          data-src={testing ? s.image : undefined}
+          data-variant={testing ? variant : undefined}
+          alt={s.alt ?? ''}
+          data-slide
+          {/* Or a mouse drag picks the photograph up and drags the browser's own
+              ghost of it around instead of running the gesture below. */}
+          draggable={false}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+          class:list={[
+            'hero-photo absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out',
+            i === 0 ? 'opacity-100' : 'opacity-0',
+          ]}
+        />
+      )),
+    )}
+
+    {testing && (
+      <>
+        <script
+          is:inline
+          set:html={`(function(){var v=document.documentElement.dataset.heroVariant||'a';var s=document.currentScript.parentNode.querySelectorAll('img[data-variant]');for(var i=0;i<s.length;i++){if(s[i].dataset.variant===v){s[i].src=s[i].dataset.src}else{s[i].remove()}}})()`}
+        />
+        {/* Without scripting nothing above ever gets a src, so variant A is
+            repeated here as plain markup. */}
+        <noscript>
+          {slides.map((s, i) => (
+            <img
+              src={s.image}
+              alt={s.alt ?? ''}
+              class:list={[
+                'hero-photo absolute inset-0 h-full w-full object-cover',
+                i === 0 ? 'opacity-100' : 'opacity-0',
+              ]}
+            />
+          ))}
+        </noscript>
+      </>
+    )}
 
     <!-- vignette + legibility wash -->
     <div class="hero-overlay absolute inset-0"></div>
 
-    <!-- overlay content -->
-    <div class="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-white">
-      <slot />
+    {/* Clear of the fixed header. Placed before the content column so the
+        calendar, which opens upward out of the booking bar, is painted over
+        these rather than under them.
+
+        The two panels are deliberately hung on *different* measures rather than
+        on one shared frame. Given a common edge they draw a rail down each side
+        of the hero, and on a wide screen that rail lands exactly where the
+        content column ends and the gutter begins, so the same line gets stated
+        three times over. Staggered, no two vertical edges on the hero repeat:
+        the direct-booking box shares the booking bar's `max-w-5xl` and so reads
+        as belonging to it, while the rating sits out at `max-w-7xl`, past the
+        column and into the gutter.
+
+        One grid cell holds both, which is what lets each keep its own width and
+        still start at the same height. Below `sm` the placement is dropped, the
+        two auto-place into rows instead, and they stack against the right edge:
+        at that width the pair is far too wide to share a line. `top-right` leads
+        in the DOM so the rating, the shorter of the two, heads that stack. */}
+    {(hasTopLeft || hasTopRight) && (
+      <div class="absolute inset-x-0 top-28 z-20 grid gap-3">
+        <div class="mx-auto flex w-full max-w-7xl justify-end px-4 sm:col-start-1 sm:row-start-1">
+          {/* Columns, so several overlays can stack in one corner rather than
+              spreading along the top edge. */}
+          <div class="flex flex-col items-end gap-3">
+            <slot name="top-right" />
+          </div>
+        </div>
+        <div class="mx-auto flex w-full max-w-5xl justify-end px-4 sm:col-start-1 sm:row-start-1 sm:justify-start">
+          <div class="flex flex-col items-end gap-3 sm:items-start">
+            <slot name="top-left" />
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Overlay content, as one column from the header down to the slide dots.
+        The default slot takes whatever height is left over once the tagline and
+        the booking bar have taken theirs, so it centres on the free space rather
+        than on the whole photograph. On a short phone the bar and tagline eat
+        most of the hero, and centring on the photograph would drop the name
+        straight on top of them. */}
+    <div class="absolute inset-0 z-20 flex flex-col px-4 pb-20 pt-28 text-white sm:pb-24">
+      <div class="flex flex-1 items-center justify-center text-center">
+        <slot />
+      </div>
+
+      {bottomLead && (
+        <div class="mx-auto mb-7 w-full max-w-3xl text-center sm:mb-9">
+          <Fragment set:html={bottomLead} />
+        </div>
+      )}
+      {hasBottom && <slot name="bottom" />}
     </div>
 
-    {/* Anchored above the slide dots — used for the booking bar. */}
-    {hasBottom && (
-      <div class="absolute inset-x-0 bottom-20 z-20 px-4 sm:bottom-24">
-        <slot name="bottom" />
-      </div>
-    )}
-
-    {/* Below the fixed header, clear of the centred headline — used for the
-        review score. z-20 keeps it under the header (z-50) as it collapses. */}
-    {hasTopRight && (
-      <div class="absolute right-4 top-24 z-20 sm:right-6 sm:top-28">
-        <slot name="top-right" />
-      </div>
-    )}
-
-    {slides.length > 1 && (
+    {dotCount > 1 && (
       <>
-        {/* Controls sit in the lower corners so they stay clear of the headline. */}
+        {/* Halfway down the outer edges, where a carousel is looked for, and out
+            of the way of both the headline in the middle and the booking bar
+            along the bottom. The dots keep the bottom centre to themselves. */}
         <button
           type="button"
           data-carousel-prev
           aria-label="Previous slide"
-          class="absolute bottom-4 left-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
+          class="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
         >‹</button>
         <button
           type="button"
           data-carousel-next
           aria-label="Next slide"
-          class="absolute bottom-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
+          class="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
         >›</button>
         <div class="absolute bottom-4 left-1/2 z-20 flex h-10 -translate-x-1/2 items-center gap-2">
-          {slides.map((_, i) => (
+          {Array.from({ length: dotCount }, (_, i) => (
             <button
               type="button"
               data-carousel-dot
@@ -87,8 +183,34 @@ const hasTopRight = Astro.slots.has('top-right');
 </section>
 
 <script>
+  import { track } from '../lib/analytics';
+
+  // Report which arm of the hero split test this visitor is in. Sent once per
+  // page view, and also set as a user property so the conversions that follow
+  // (book_now_click, and Mews' own purchase events) can be split by variant
+  // without every call site knowing the experiment exists.
+  //
+  // Guarded on the attribute rather than wrapped in a conditional: Astro hoists
+  // and bundles this script, so it runs wherever the component does regardless
+  // of what the markup around it was conditioned on.
+  const experiment = document.querySelector<HTMLElement>('[data-hero-test]')?.dataset.heroTest;
+  const variant = document.documentElement.dataset.heroVariant;
+  if (experiment && variant) {
+    const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+    try {
+      w.gtag?.('set', 'user_properties', { hero_variant: variant });
+    } catch {
+      /* analytics must never break the page */
+    }
+    track('experiment_view', { experiment_id: experiment });
+  }
+
   document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
     const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-slide]'));
+    // Surplus dots, where the other arm of the split test was the longer one.
+    root
+      .querySelectorAll<HTMLElement>('[data-carousel-dot]')
+      .forEach((dot, i) => i >= slides.length && dot.remove());
     const dots = Array.from(root.querySelectorAll<HTMLElement>('[data-carousel-dot]'));
     if (slides.length < 2) return;
 
@@ -119,6 +241,122 @@ const hasTopRight = Astro.slots.has('top-right');
     dots.forEach((d, k) => d.addEventListener('click', () => (show(k), start())));
     root.addEventListener('mouseenter', stop);
     root.addEventListener('mouseleave', start);
+
+    /* ---- Drag and swipe ----------------------------------------------------
+     * The hero crossfades rather than slides, so there is no track to pull
+     * along. The drag scrubs the crossfade instead: pulling towards the next
+     * photograph fades it up over the current one in proportion to how far you
+     * have gone, and letting go either finishes the change or falls back to
+     * where it started. That is honest to what the component actually does, and
+     * it avoids the alternative of translating `object-cover` images off their
+     * own box, which only exposes an empty edge.
+     *
+     * Pointer events rather than touch events, so a mouse drag, a swipe and a
+     * pen all run the same path.
+     */
+    const DRAG_MIN = 8; // px of travel before a press counts as a drag
+    const COMMIT = 0.5; // how much of the crossfade must be scrubbed to stick
+
+    let pointer: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let dragging = false;
+    let dragged = false;
+    let incoming = -1;
+    let progress = 0;
+    let unarm: ReturnType<typeof setTimeout> | undefined;
+
+    // Roughly half the hero, floored so the gesture stays usable on a narrow
+    // phone where half the width is a very short distance.
+    const sweep = () => Math.max(140, root.clientWidth * 0.5);
+
+    function scrub() {
+      slides.forEach((s, k) => {
+        s.style.opacity = k === index ? String(1 - progress) : k === incoming ? String(progress) : '0';
+      });
+    }
+
+    function endDrag(commit: boolean) {
+      if (pointer === null) return;
+      pointer = null;
+      const was = dragging;
+      dragging = false;
+      root.classList.remove('is-dragging');
+      if (was) {
+        // Flush the class removal before touching opacity again, so the settle
+        // animates from wherever the drag left the crossfade instead of the
+        // browser coalescing the two changes and jumping straight there.
+        void root.offsetWidth;
+        show(commit && progress >= COMMIT && incoming >= 0 ? incoming : index);
+
+        // Arm the click guard below. It is disarmed on a timer as well as by the
+        // click itself, because a drag does not reliably end in one: release the
+        // pointer outside the hero and no click is generated at all, and a guard
+        // left armed would go on to swallow an unrelated click later.
+        dragged = true;
+        clearTimeout(unarm);
+        unarm = setTimeout(() => (dragged = false), 400);
+      }
+      incoming = -1;
+      progress = 0;
+      start();
+    }
+
+    root.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return; // primary button, or any touch or pen contact
+      // The overlays are things you press and type in. A drag that begins on one
+      // of them belongs to it, not to the carousel.
+      if ((e.target as HTMLElement).closest('a, button, input, select, textarea, label, [role="button"]')) return;
+      pointer = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      dragged = false;
+      stop();
+    });
+
+    root.addEventListener('pointermove', (e) => {
+      if (pointer !== e.pointerId) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!dragging) {
+        // Held until the movement is both far enough to be deliberate and more
+        // sideways than not, so that a swipe down the page still scrolls it.
+        if (Math.abs(dx) < DRAG_MIN || Math.abs(dx) <= Math.abs(dy)) return;
+        dragging = true;
+        root.classList.add('is-dragging');
+        try {
+          // Keeps the gesture alive when the pointer leaves the hero mid-drag.
+          // Not worth losing the drag over if the pointer has already gone.
+          root.setPointerCapture(e.pointerId);
+        } catch {
+          /* no capture, but the drag still tracks while the pointer is here */
+        }
+      }
+
+      incoming = ((dx < 0 ? index + 1 : index - 1) + slides.length) % slides.length;
+      progress = Math.min(1, Math.abs(dx) / sweep());
+      scrub();
+    });
+
+    root.addEventListener('pointerup', () => endDrag(true));
+    root.addEventListener('pointercancel', () => endDrag(false));
+
+    // A drag that happens to finish over the tagline or the booking bar must not
+    // also land on it as a click. Captured, so it is stopped before it reaches
+    // whatever is underneath.
+    root.addEventListener(
+      'click',
+      (e) => {
+        if (!dragged) return;
+        dragged = false;
+        clearTimeout(unarm);
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true,
+    );
+
     start();
   });
 </script>

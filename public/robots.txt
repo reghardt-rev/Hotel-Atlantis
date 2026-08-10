@@ -1,0 +1,13 @@
+# Hotel Atlantis, Amsterdam
+#
+# Everything here is public and we would rather it were read correctly than not
+# at all, so nothing is disallowed. /llms.txt is a plain-text brief generated
+# from the same content as the pages: rooms with their sizes and occupancy, the
+# area guides, the full FAQ, and how to reach us.
+
+User-agent: *
+Allow: /
+
+# Not a standard robots.txt directive, and ignored by crawlers that do not know
+# it. Named here because it is the obvious place to look for it.
+LLMs: /llms.txt

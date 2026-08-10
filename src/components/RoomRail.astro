@@ -1,0 +1,177 @@
+---
+/**
+ * The homepage room list, as one edge-to-edge run scrolled sideways.
+ *
+ * Native scrolling with CSS snap points rather than a scripted slider: it works
+ * with a touchpad, a swipe and a screen reader's own scrolling before any of
+ * this component's JavaScript has run, and the arrows below are a convenience on
+ * top of that rather than the mechanism. Every card is a link, so tabbing
+ * through them scrolls the rail without help.
+ *
+ * The heading above and the controls below stay in the content column; only the
+ * rail itself is full width.
+ */
+import RoomCard from './RoomCard.astro';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  rooms: { slug: string; entry: any; photos?: { src: string; alt: string }[] }[];
+  locale: Locale;
+}
+const { rooms, locale } = Astro.props;
+const tr = t(locale);
+---
+
+<section id="rooms" class="py-20 sm:py-28" data-room-carousel>
+  <div class="mx-auto max-w-6xl px-4">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
+    <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
+  </div>
+
+  <div class="room-rail mt-10" data-room-rail>
+    {rooms.map((room) => <RoomCard room={room} locale={locale} aspect="wide" />)}
+  </div>
+
+  {/* Everything you can do with the rail, gathered under it rather than up
+      beside the heading: the rooms come first, and this is where you are once
+      you have run out of them. Back in the content column, the link on the same
+      left edge as the heading and the arrows out at the right.
+
+      The gap above is wide because a card's own "View room" link lands directly
+      over this one in the same colour and size, and at a normal spacing the two
+      read as a pair belonging to that card rather than as the rail's own row. */}
+  <div class="mx-auto mt-14 flex max-w-6xl items-center justify-between gap-4 px-4">
+    <a href={localePath(locale, '/rooms')} class="text-sm font-medium text-clay hover:underline">
+      {tr.allRooms} →
+    </a>
+    {/* Hidden until the script confirms the rail actually overflows: on a wide
+        screen with few rooms there is nothing to scroll to. */}
+    <div class="hidden items-center gap-2 sm:flex" data-rail-nav hidden>
+      <button type="button" class="rail-nav" data-rail-prev aria-label={tr.scrollPrev}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <button type="button" class="rail-nav" data-rail-next aria-label={tr.scrollNext}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-room-carousel]');
+  const rail = root?.querySelector<HTMLElement>('[data-room-rail]');
+
+  if (root && rail) {
+    const nav = root.querySelector<HTMLElement>('[data-rail-nav]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-rail-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-rail-next]');
+    const originals = Array.from(rail.children) as HTMLElement[];
+
+    // Width of one full run of rooms. Measured after the copies are in place, as
+    // the distance between the first copy and the first original, so it holds
+    // whatever the cards happen to be sized at.
+    let unit = 0;
+    let looping = false;
+
+    // The rail loops by carrying a copy of the run on either side of the real
+    // one and jumping back a run's width whenever a copy is scrolled into. The
+    // jump is the same distance as the pattern repeats, so nothing moves on
+    // screen. Copies are hidden from assistive tech and taken out of the tab
+    // order: they are the same twelve rooms, and should be announced once.
+    function copyOf(node: HTMLElement) {
+      const copy = node.cloneNode(true) as HTMLElement;
+      copy.setAttribute('aria-hidden', 'true');
+      copy.setAttribute('tabindex', '-1');
+      copy
+        .querySelectorAll<HTMLElement>('a, button')
+        .forEach((el) => el.setAttribute('tabindex', '-1'));
+      return copy;
+    }
+
+    function jumpTo(x: number) {
+      // Instant, or the wrap would animate across the whole run.
+      const previous = rail!.style.scrollBehavior;
+      rail!.style.scrollBehavior = 'auto';
+      rail!.scrollLeft = x;
+      rail!.style.scrollBehavior = previous;
+    }
+
+    function setupLoop() {
+      if (looping || originals.length === 0) return;
+      // Nothing to loop through if the run already fits.
+      if (rail!.scrollWidth <= rail!.clientWidth + 2) return;
+
+      rail!.prepend(...originals.map(copyOf));
+      rail!.append(...originals.map(copyOf));
+      looping = true;
+      measure();
+      jumpTo(unit);
+    }
+
+    function measure() {
+      if (!looping) return;
+      const firstCopy = rail!.firstElementChild as HTMLElement | null;
+      if (firstCopy) unit = originals[0].offsetLeft - firstCopy.offsetLeft;
+    }
+
+    function wrap() {
+      if (!looping || unit <= 0) return;
+      const at = rail!.scrollLeft;
+      if (at < unit * 0.5) jumpTo(at + unit);
+      else if (at > unit * 1.5) jumpTo(at - unit);
+    }
+
+    // One card plus the gap between them, measured rather than assumed: the card
+    // width is a clamp() and the gap is a rem, so neither is known here.
+    function step() {
+      const card = rail!.firstElementChild as HTMLElement | null;
+      if (!card) return rail!.clientWidth;
+      const gap = parseFloat(getComputedStyle(rail!).columnGap) || 0;
+      return card.offsetWidth + gap;
+    }
+
+    function sync() {
+      const max = rail!.scrollWidth - rail!.clientWidth;
+      nav?.toggleAttribute('hidden', max <= 2);
+      // A looping rail always has somewhere to go in both directions.
+      if (looping) {
+        if (prev) prev.disabled = false;
+        if (next) next.disabled = false;
+        return;
+      }
+      // A couple of pixels of slack: scrollLeft is fractional on a scaled
+      // display and lands just shy of the end, which would otherwise leave
+      // "next" enabled with nowhere left to go.
+      const at = rail!.scrollLeft;
+      if (prev) prev.disabled = at <= 2;
+      if (next) next.disabled = at >= max - 2;
+    }
+
+    prev?.addEventListener('click', () => rail.scrollBy({ left: -step() }));
+    next?.addEventListener('click', () => rail.scrollBy({ left: step() }));
+
+    rail.addEventListener(
+      'scroll',
+      () => {
+        wrap();
+        sync();
+      },
+      { passive: true },
+    );
+    window.addEventListener(
+      'resize',
+      () => {
+        measure();
+        sync();
+      },
+      { passive: true },
+    );
+
+    setupLoop();
+    sync();
+  }
+</script>

@@ -13,8 +13,16 @@ interface Props {
   locale?: Locale;
   /** True on pages whose hero sits behind a transparent header (the homepage). */
   heroHeader?: boolean;
+  /** Serialised JSON-LD graph for this page, from `src/lib/schema.ts`. */
+  schema?: string;
 }
-const { title, description = '', locale = defaultLocale, heroHeader = false } = Astro.props;
+const {
+  title,
+  description = '',
+  locale = defaultLocale,
+  heroHeader = false,
+  schema,
+} = Astro.props;
 
 const settings = await getSettings();
 const siteName = settings?.siteName || 'Hotel Atlantis';
@@ -39,6 +47,32 @@ const ga4Id = (settings?.ga4MeasurementId || import.meta.env.PUBLIC_GA4_ID || ''
     <meta name="generator" content={Astro.generator} />
     <title>{title} · {siteName}</title>
     {description && <meta name="description" content={description} />}
+
+    {/* Structured data for this page type. Emitted into the HTML rather than
+        injected by a script, so crawlers that do not run JavaScript still read
+        it. See the note at the top of src/lib/schema.ts. */}
+    {schema && <script type="application/ld+json" is:inline set:html={schema} />}
+
+    {/* Hero split test. Blocking, in the head, and deliberately tiny: the
+        variant has to be settled before anything paints, or the wrong hero is
+        drawn and then swapped in front of the visitor.
+
+        The assignment is sticky for 180 days. A visitor who saw one hero and
+        came back to the other would make the conversion figures meaningless.
+        Crawlers are pinned to A so the indexed page is stable.
+
+        No measurement here. This only records which arm the visitor is in;
+        reporting it waits for analytics consent. */}
+    <script
+      is:inline
+      set:html={`(function(){try{
+var d=document.documentElement,n='atlantis-hero',m=document.cookie.match(/(?:^|; )atlantis-hero=(a|b)/);
+if(/bot|crawl|spider|slurp|bingpreview|gptbot|claudebot|perplexity/i.test(navigator.userAgent)){d.dataset.heroVariant='a';return}
+var v=m?m[1]:(Math.random()<0.5?'a':'b');
+if(!m){document.cookie=n+'='+v+';path=/;max-age='+60*60*24*180+';samesite=lax'+(location.protocol==='https:'?';secure':'')}
+d.dataset.heroVariant=v;
+}catch(e){document.documentElement.dataset.heroVariant='a'}})()`}
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -90,7 +124,13 @@ try{var c=JSON.parse(localStorage.getItem('atlantis-consent')||'null');if(c&&c.a
       />
     )}
 
-    <Header locale={locale} siteName={siteName} mewsConfigId={mewsConfigId} overHero={heroHeader} />
+    <Header
+      locale={locale}
+      siteName={siteName}
+      mewsConfigId={mewsConfigId}
+      overHero={heroHeader}
+      settings={settings}
+    />
     <main class:list={['flex-1', !heroHeader && 'pt-28']}>
       <slot />
     </main>

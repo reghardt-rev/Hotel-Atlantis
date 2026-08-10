@@ -1,4 +1,7 @@
 ---
+import SocialIcon from './SocialIcon.astro';
+import RevenueGuruMark from './RevenueGuruMark.astro';
+import { socialLinks } from '../lib/social';
 import { t, localePath, sectionHref, sections, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -10,6 +13,7 @@ const tr = t(locale);
 const year = new Date().getFullYear();
 const siteName = settings?.siteName ?? 'Hotel Atlantis';
 const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: tr.nav[id] }));
+const links = socialLinks(settings);
 ---
 
 <footer class="bg-ink text-paper">
@@ -40,10 +44,19 @@ const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: t
       {settings?.email && (
         <p><a href={`mailto:${settings.email}`} class="hover:text-paper">{settings.email}</a></p>
       )}
-      {(settings?.social?.instagram || settings?.social?.facebook) && (
-        <div class="flex gap-4 pt-2">
-          {settings?.social?.instagram && <a href={settings.social.instagram} class="hover:text-paper">Instagram</a>}
-          {settings?.social?.facebook && <a href={settings.social.facebook} class="hover:text-paper">Facebook</a>}
+      {links.length > 0 && (
+        <div class="flex flex-wrap gap-4 pt-3">
+          {links.map((link) => (
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={link.label}
+              class="text-paper/70 transition-colors hover:text-paper"
+            >
+              <SocialIcon name={link.key} />
+            </a>
+          ))}
         </div>
       )}
     </div>
@@ -54,5 +67,14 @@ const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: t
     <button type="button" data-cookie-settings class="cursor-pointer underline transition-colors hover:text-paper/80">
       {tr.cookies.manage}
     </button>
+    <a
+      href="https://revenueguru.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-1.5 transition-colors hover:text-paper/80"
+    >
+      <RevenueGuruMark class="h-3.5 w-auto" />
+      <span>{tr.designedBy} Revenue Guru</span>
+    </a>
   </div>
 </footer>

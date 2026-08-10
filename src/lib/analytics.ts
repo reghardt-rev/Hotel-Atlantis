@@ -16,11 +16,17 @@ export function track(name: string, params: Record<string, unknown> = {}): void 
   };
 
   try {
+    // Every event carries the hero variant while a split test is running, so
+    // the existing conversions can be compared between arms without each call
+    // site having to know the experiment exists.
+    const variant = document.documentElement.dataset.heroVariant;
+    const payload = variant ? { hero_variant: variant, ...params } : params;
+
     if (typeof w.gtag === 'function') {
-      w.gtag('event', name, params);
+      w.gtag('event', name, payload);
     } else {
       // No gtag (id blank, or blocked): leave a trace for GTM if it is present.
-      (w.dataLayer = w.dataLayer || []).push({ event: name, ...params });
+      (w.dataLayer = w.dataLayer || []).push({ event: name, ...payload });
     }
   } catch {
     /* analytics must never break the page */

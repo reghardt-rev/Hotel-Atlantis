@@ -1,0 +1,50 @@
+---
+/**
+ * Socials. One card per channel the hotel has filled in under Site settings.
+ *
+ * Channels with no URL are absent rather than shown greyed out, so the page is
+ * honest about where the hotel actually is. With none set the page still exists
+ * and says so, rather than 404ing the link that the side menu points at.
+ */
+import Layout from '../layouts/Layout.astro';
+import SocialIcon from '../components/SocialIcon.astro';
+import { getSettings } from '../lib/content';
+import { socialLinks } from '../lib/social';
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const settings = await getSettings();
+const links = socialLinks(settings);
+---
+
+<Layout title={tr.socials} description={tr.socialsIntro} locale={locale}>
+  <section class="mx-auto max-w-3xl px-4 py-16">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.socials}</p>
+    <h1 class="mt-3 font-serif text-5xl">{tr.socialsIntro}</h1>
+
+    {links.length === 0 ? (
+      <p class="mt-8 text-muted">{tr.socialsEmpty}</p>
+    ) : (
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2">
+        {links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-4 rounded-xl border border-stone-warm bg-paper px-5 py-4 transition-colors hover:border-clay"
+            >
+              <span class="text-clay"><SocialIcon name={link.key} class="h-6 w-6" /></span>
+              <span class="font-medium">{link.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</Layout>

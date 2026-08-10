@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { t, localePath, formatDate, type Locale } from '../lib/i18n';
+import { getSettings } from '../lib/content';
+import { articleSchema, hotelSchema, graph } from '../lib/schema';
 
 interface Props {
   locale: Locale;
@@ -9,9 +11,15 @@ interface Props {
 }
 const { locale, activity, body } = Astro.props;
 const tr = t(locale);
+
+const settings = await getSettings();
+const schema = graph([
+  hotelSchema(settings, locale, Astro.site),
+  articleSchema(activity, locale, Astro.url.pathname, Astro.site),
+]);
 ---
 
-<Layout title={activity.title} description={activity.summary || ''} locale={locale}>
+<Layout title={activity.title} description={activity.summary || ''} locale={locale} schema={schema}>
   <article class="mx-auto max-w-4xl px-4 py-16">
     <a href={localePath(locale, '/activities')} class="text-sm text-muted hover:text-ink">
       {tr.backToActivities}
@@ -24,8 +32,14 @@ const tr = t(locale);
     )}
 
     <div class="mt-8 aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
-      {activity.image && <img src={activity.image} alt={activity.title} class="h-full w-full object-cover" />}
+      {activity.image && <img src={activity.image} alt={activity.imageAlt || activity.title} class="h-full w-full object-cover" />}
     </div>
+
+    {/* Licence terms on borrowed photography require the credit to be visible,
+        so it sits with the photo rather than in a page footer. */}
+    {activity.image && activity.imageCredit && (
+      <p class="mt-2 text-xs text-muted">{activity.imageCredit}</p>
+    )}
 
     {activity.summary && (
       <p class="mt-8 font-serif text-2xl leading-snug text-ink">{activity.summary}</p>

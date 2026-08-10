@@ -4,8 +4,11 @@ import { t, localePath, type Locale } from '../lib/i18n';
 interface Props {
   room: { slug: string; entry: any; photos?: { src: string; alt: string }[] };
   locale: Locale;
+  /** `wide` is for the homepage rail, where a card is read in passing. */
+  aspect?: 'card' | 'wide';
 }
-const { room, locale } = Astro.props;
+const { room, locale, aspect = 'card' } = Astro.props;
+const aspectClass = aspect === 'wide' ? 'aspect-[3/2]' : 'aspect-[4/3]';
 const tr = t(locale);
 const e = room.entry;
 const cover = room.photos?.[0];
@@ -16,7 +19,12 @@ const meta = [e.maxOccupancy && `${e.maxOccupancy} ${tr.guests}`, e.sizeSqm && `
 ---
 
 <a href={href} class="group block">
-  <div class="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
+  <div
+    class:list={[
+      aspectClass,
+      'w-full overflow-hidden rounded-lg bg-gradient-to-br from-sand via-stone-warm to-stone-warm',
+    ]}
+  >
     {cover && (
       <img
         src={cover.src}

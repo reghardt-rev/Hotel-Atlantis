@@ -1,0 +1,27 @@
+---
+/**
+ * About us. The body lives in the shared `pages` collection under the slug
+ * `about`, so staff can edit it in Keystatic without a code change, the same
+ * way the privacy policy works.
+ */
+import Layout from '../layouts/Layout.astro';
+import { getPage, renderMarkdoc } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const page = await getPage(locale, 'about');
+const body = page ? await renderMarkdoc(page.content) : '';
+const title = page?.title || tr.about;
+---
+
+<Layout title={title} description={page?.seoDescription || ''} locale={locale}>
+  <article class="mx-auto max-w-3xl px-4 py-16">
+    <h1 class="font-serif text-5xl">{title}</h1>
+    {body ? <div class="rich mt-8 text-ink" set:html={body} /> : <p class="mt-8 text-muted">—</p>}
+  </article>
+</Layout>

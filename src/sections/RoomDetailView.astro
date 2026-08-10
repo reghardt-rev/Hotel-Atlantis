@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import BookNow from '../components/BookNow.astro';
 import { t, localePath, type Locale } from '../lib/i18n';
+import { getSettings } from '../lib/content';
+import { roomSchema, hotelSchema, graph } from '../lib/schema';
 
 interface Props {
   locale: Locale;
@@ -12,9 +14,15 @@ interface Props {
 }
 const { locale, room, body, photos, mewsConfigId } = Astro.props;
 const tr = t(locale);
+
+const settings = await getSettings();
+const schema = graph([
+  hotelSchema(settings, locale, Astro.site),
+  roomSchema({ entry: room, photos }, settings, locale, Astro.url.pathname, Astro.site),
+]);
 ---
 
-<Layout title={room.title} description={room.shortDescription || ''} locale={locale}>
+<Layout title={room.title} description={room.shortDescription || ''} locale={locale} schema={schema}>
   <article class="mx-auto max-w-4xl px-4 py-16">
     <a href={localePath(locale, '/rooms')} class="text-sm text-muted hover:text-ink">
       {tr.backToRooms}

@@ -60,6 +60,22 @@ const roomPhotosCollection = collection({
   },
 });
 
+/**
+ * Ties the three language versions of one entry together.
+ *
+ * Slugs come from the title, so they can diverge in translation: rename a room
+ * in Dutch and it stops being reachable under the English slug. The language
+ * switcher needs to know those are one room, and nothing else in the entry says
+ * so. Give every translation of an entry the same key here.
+ */
+function translationKeyField(what: string) {
+  return fields.text({
+    label: 'Translation key',
+    description: `Same value on every language of this ${what}, so the language switcher can find them. Lowercase, no spaces, e.g. "double-room".`,
+    validation: { isRequired: false },
+  });
+}
+
 function roomsCollection(locale: Locale) {
   return collection({
     label: `Rooms · ${LOCALE_LABEL[locale]}`,
@@ -70,6 +86,7 @@ function roomsCollection(locale: Locale) {
     entryLayout: 'content',
     schema: {
       title: fields.slug({ name: { label: 'Room name' } }),
+      translationKey: translationKeyField('room'),
       photos: fields.relationship({
         label: 'Photos',
         description: 'Shared photo set — upload once, and every language of this room uses it.',
@@ -126,11 +143,24 @@ function activitiesCollection(locale: Locale) {
     entryLayout: 'content',
     schema: {
       title: fields.slug({ name: { label: 'Activity title' } }),
+      translationKey: translationKeyField('activity'),
       publishedAt: fields.date({
         label: 'Published',
         description: 'The most recent activity is the one featured on the homepage.',
       }),
       image: image('Image', 'activities'),
+      imageAlt: fields.text({
+        label: 'Photo description',
+        description:
+          'What the photo actually shows, for screen readers. Falls back to the title, which is only right while the photo is of the thing the article is named after.',
+        validation: { isRequired: false },
+      }),
+      imageCredit: fields.text({
+        label: 'Photo credit',
+        description:
+          'Shown under the photo. Required for anything not shot by the hotel, e.g. "G. Lanting, CC BY 4.0".',
+        validation: { isRequired: false },
+      }),
       summary: fields.text({ label: 'Summary', multiline: true }),
       draft: fields.checkbox({ label: 'Draft (hide from the site)', defaultValue: false }),
       content: fields.markdoc({ label: 'Article' }),
@@ -168,6 +198,18 @@ function pagesCollection(locale: Locale) {
     schema: {
       title: fields.slug({ name: { label: 'Page title' } }),
       seoDescription: fields.text({ label: 'SEO description', multiline: true }),
+      sideImages: fields.array(
+        fields.object({
+          image: image('Photo', 'sustainability'),
+          alt: fields.text({ label: 'Alt text (describe the photo)' }),
+        }),
+        {
+          label: 'Side photos',
+          description:
+            'Optional. Spread down the page beside the text, alternating left and right. Fewer photos than sections is fine: they space themselves out.',
+          itemLabel: (props) => props.fields.alt.value || 'Photo',
+        },
+      ),
       content: fields.markdoc({ label: 'Body' }),
     },
   });
@@ -192,8 +234,46 @@ function galleryCollection(locale: Locale) {
   });
 }
 
+/**
+ * What the guest gets by booking on this site instead of through an OTA.
+ *
+ * Shown in the badge under the hero rating. One of these per language rather
+ * than one shared list, because the copy makes price claims and those have to be
+ * right in each language, not machine-guessed.
+ */
+function directBookingSingleton(locale: Locale) {
+  return singleton({
+    label: `Book direct \u00b7 ${LOCALE_LABEL[locale]}`,
+    path: `src/content/direct-booking/${locale}`,
+    format: { data: 'yaml' },
+    schema: {
+      title: fields.text({ label: 'Heading' }),
+      items: fields.array(fields.object({ text: fields.text({ label: 'Benefit' }) }), {
+        label: 'Benefits',
+        itemLabel: (props) => props.fields.text.value || 'Benefit',
+      }),
+    },
+  });
+}
+
+/**
+ * Dev edits the files on disk; everything else commits through GitHub.
+ *
+ * The one exception is creating the GitHub App. Keystatic's setup wizard writes
+ * the generated credentials to a local `.env`, so it refuses to run outside
+ * development ("App setup only allowed in development") and cannot be completed
+ * on the deployed site at all. To run it: put PUBLIC_KEYSTATIC_GITHUB_SETUP=1 in
+ * .env, restart the dev server, and open /keystatic. Give the wizard the
+ * deployed URL so the App is registered against production as well as localhost.
+ * Take the flag back out afterwards, or dev will be committing to the live repo.
+ */
+// PUBLIC_ prefixed because this file is imported by the admin UI in the browser,
+// and Astro only inlines PUBLIC_ vars there. Without the prefix the server picks
+// up the flag and the browser silently does not, so the UI stays in local mode.
+const editFilesLocally = import.meta.env.DEV && !import.meta.env.PUBLIC_KEYSTATIC_GITHUB_SETUP;
+
 export default config({
-  storage: import.meta.env.DEV
+  storage: editFilesLocally
     ? { kind: 'local' }
     : { kind: 'github', repo: 'reghardt-rev/Hotel-Atlantis' },
 
@@ -202,19 +282,34 @@ export default config({
     navigation: {
       Settings: ['settings', 'homepage'],
       Shared: ['roomPhotos'],
-      English: ['rooms_en', 'offers_en', 'activities_en', 'news_en', 'pages_en', 'gallery_en'],
-      Nederlands: ['rooms_nl', 'offers_nl', 'activities_nl', 'news_nl', 'pages_nl', 'gallery_nl'],
-      Deutsch: ['rooms_de', 'offers_de', 'activities_de', 'news_de', 'pages_de', 'gallery_de'],
+      English: ['rooms_en', 'offers_en', 'activities_en', 'news_en', 'pages_en', 'gallery_en', 'directBooking_en'],
+      Nederlands: ['rooms_nl', 'offers_nl', 'activities_nl', 'news_nl', 'pages_nl', 'gallery_nl', 'directBooking_nl'],
+      Deutsch: ['rooms_de', 'offers_de', 'activities_de', 'news_de', 'pages_de', 'gallery_de', 'directBooking_de'],
     },
   },
 
   singletons: {
+    directBooking_en: directBookingSingleton('en'),
+    directBooking_nl: directBookingSingleton('nl'),
+    directBooking_de: directBookingSingleton('de'),
     settings: singleton({
       label: 'Site settings',
       path: 'src/content/settings/site',
       schema: {
         siteName: fields.text({ label: 'Site name', defaultValue: 'Hotel Atlantis' }),
-        tagline: fields.text({ label: 'Tagline', multiline: true }),
+        tagline: fields.text({
+          label: 'Tagline',
+          description:
+            'Shown on the hero, above the booking bar, and used as the homepage description for search engines. Clear this and it is gone from everywhere.',
+          multiline: true,
+          validation: { isRequired: false },
+        }),
+        showTagline: fields.checkbox({
+          label: 'Show the tagline on the hero',
+          description:
+            'Turn this off to leave the hero to the photograph and the hotel name. The text above is still used for the search-engine description and in the footer.',
+          defaultValue: true,
+        }),
         reviewScore: fields.number({
           label: 'Guest review score',
           description:
@@ -252,6 +347,10 @@ export default config({
           {
             instagram: fields.url({ label: 'Instagram URL', validation: { isRequired: false } }),
             facebook: fields.url({ label: 'Facebook URL', validation: { isRequired: false } }),
+            tiktok: fields.url({ label: 'TikTok URL', validation: { isRequired: false } }),
+            youtube: fields.url({ label: 'YouTube URL', validation: { isRequired: false } }),
+            linkedin: fields.url({ label: 'LinkedIn URL', validation: { isRequired: false } }),
+            x: fields.url({ label: 'X (Twitter) URL', validation: { isRequired: false } }),
           },
           { label: 'Social links' },
         ),
@@ -274,6 +373,24 @@ export default config({
           }),
           {
             label: 'Front-page carousel',
+            description: 'Variant A. What everyone sees while no B slides are set.',
+            itemLabel: (props) => props.fields.alt.value || 'Slide',
+          },
+        ),
+        carouselB: fields.array(
+          fields.object({
+            image: fields.image({
+              label: 'Slide image',
+              directory: 'public/images/carousel-b',
+              publicPath: '/images/carousel-b/',
+              validation: { isRequired: true },
+            }),
+            alt: fields.text({ label: 'Alt text (describe the photo)' }),
+          }),
+          {
+            label: 'Front-page carousel \u2014 variant B (A/B test)',
+            description:
+              'Add slides here to start a split test of the hero: half of visitors see these instead. Each visitor keeps the same variant on later visits, and the choice is reported to GA4 as hero_variant. Empty this list to end the test and put everyone back on A.',
             itemLabel: (props) => props.fields.alt.value || 'Slide',
           },
         ),

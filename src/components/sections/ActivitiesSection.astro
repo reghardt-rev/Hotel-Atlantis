@@ -1,10 +1,17 @@
 ---
 /**
- * Homepage activities section. Features the most recently published activity
- * and links through to the full list. The nav's "Activities" tab scrolls here.
+ * Homepage activities section: every published article, as a collage.
+ *
+ * Columns rather than a grid of equal tiles. The photographs are a mix of wide
+ * landscapes and upright detail shots, and the collage is built by letting each
+ * keep a different height rather than cropping them all to one tile, so the run
+ * reads as a spread instead of a table. Columns also close up on their own as
+ * articles are published or drafted, which a fixed grid of spans would not.
+ *
+ * The nav's "Activities" tab scrolls here.
  */
 import { listActivities } from '../../lib/content';
-import { t, localePath, formatDate, type Locale } from '../../lib/i18n';
+import { t, localePath, type Locale } from '../../lib/i18n';
 
 interface Props {
   locale: Locale;
@@ -13,49 +20,67 @@ const { locale } = Astro.props;
 const tr = t(locale);
 
 const activities = await listActivities(locale);
-const latest = activities[0];
-const e = latest?.entry;
-const href = latest ? localePath(locale, `/activities/${latest.slug}`) : '';
+
+// Cycled over the articles to give the collage its varied heights. Newest first,
+// so the first article gets the tallest frame.
+const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 'aspect-[16/10]', 'aspect-[5/4]'];
 ---
 
 <section id="activities" class="bg-sand">
   <div class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-    {latest ? (
-      <div class="grid items-center gap-10 lg:grid-cols-2">
-        <div class="aspect-[4/3] overflow-hidden rounded-xl bg-gradient-to-br from-stone-warm to-sand">
-          {e.image && (
-            <img src={e.image} alt={e.title} class="h-full w-full object-cover" loading="lazy" decoding="async" />
-          )}
-        </div>
-        <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.activities}</p>
-          <h2 class="mt-4 font-serif text-4xl sm:text-5xl">{e.title}</h2>
-          {e.publishedAt && (
-            <p class="mt-3 text-sm text-muted">{formatDate(locale, e.publishedAt)}</p>
-          )}
-          {e.summary && <p class="mt-5 text-lg leading-relaxed text-muted">{e.summary}</p>}
-
-          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <a
-              href={href}
-              class="inline-flex items-center justify-center rounded-full bg-clay px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2"
-            >
-              {tr.readMore}
-            </a>
-            <a
-              href={localePath(locale, '/activities')}
-              class="text-sm font-medium text-clay hover:underline"
-            >
-              {tr.allActivities} →
-            </a>
-          </div>
-        </div>
-      </div>
-    ) : (
+    <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.activities}</p>
         <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourActivities}</h2>
-        <p class="mt-5 text-muted">{tr.noActivities}</p>
+      </div>
+      {activities.length > 0 && (
+        <a href={localePath(locale, '/activities')} class="text-sm font-medium text-clay hover:underline">
+          {tr.allActivities} →
+        </a>
+      )}
+    </div>
+
+    {activities.length === 0 ? (
+      <p class="mt-8 text-muted">{tr.noActivities}</p>
+    ) : (
+      <div class="activity-collage mt-10">
+        {activities.map((item, i) => {
+          const e = item.entry;
+          const href = localePath(locale, `/activities/${item.slug}`);
+          return (
+            <article>
+              <a href={href} class="group block">
+                <div
+                  class:list={[
+                    shapes[i % shapes.length],
+                    'w-full overflow-hidden rounded-xl bg-gradient-to-br from-stone-warm to-sand',
+                  ]}
+                >
+                  {e.image && (
+                    <img
+                      src={e.image}
+                      alt={e.imageAlt || e.title}
+                      loading={i < 3 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
+                </div>
+                <h3 class="mt-3 font-serif text-lg leading-snug">{e.title}</h3>
+              </a>
+              {/* Every article has a button reading the same two words, so the
+                  name carries the title too rather than leaving a screen reader
+                  with a list of identical "Read more" links. */}
+              <a
+                href={href}
+                aria-label={`${tr.readMore}: ${e.title}`}
+                class="mt-3 inline-flex items-center justify-center rounded-full bg-clay px-4 py-2 text-xs font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2"
+              >
+                {tr.readMore}
+              </a>
+            </article>
+          );
+        })}
       </div>
     )}
   </div>

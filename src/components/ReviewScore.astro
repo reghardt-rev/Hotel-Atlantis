@@ -1,7 +1,12 @@
 ---
 /**
- * Guest review score over the hero, in the same translucent glass as the
- * booking bar so the two read as one system.
+ * Guest review score over the hero, wearing the shared `hero-panel` glass so it
+ * and the direct-booking badge in the opposite corner read as a matched pair
+ * framing the photograph rather than as two unrelated boxes.
+ *
+ * A dark scrim rather than a white tint: white type on a white wash holds up
+ * over a dark doorway and vanishes over bright brickwork or a pale sky, which is
+ * most of this hotel's photography.
  *
  * The figures live in Site settings rather than in this file: a review score
  * moves every week, and it should be editable in Keystatic without a deploy.
@@ -44,10 +49,7 @@ const label = [
 
 {score != null && (
   <div
-    class:list={[
-      'rounded-2xl bg-white/10 px-4 py-3 shadow-xl ring-1 ring-white/20 backdrop-blur-md',
-      className,
-    ]}
+    class:list={['hero-panel w-fit px-4 py-3.5 text-white', className]}
     role="img"
     aria-label={label}
   >

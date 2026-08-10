@@ -1,0 +1,33 @@
+---
+/**
+ * The Revenue Guru submark, drawn rather than loaded as a file.
+ *
+ * The mark is five flat geometric shapes with no gradients or type, so it costs
+ * less inline than a request would, and `currentColor` lets it take the muted
+ * tone of the footer credit and brighten with it on hover. The two-file trick
+ * used for the hotel's own wordmark is not needed here.
+ *
+ * Decorative in every use so far, since the credit link always spells the name
+ * out; pass `title` to give it an accessible name if that ever stops being true.
+ */
+interface Props {
+  class?: string;
+  title?: string;
+}
+const { class: className = 'h-4 w-auto', title } = Astro.props;
+---
+
+<svg
+  viewBox="0 0 788 480"
+  fill="currentColor"
+  class={className}
+  role={title ? 'img' : undefined}
+  aria-hidden={title ? undefined : 'true'}
+>
+  {title && <title>{title}</title>}
+  <circle cx="112" cy="112" r="112" />
+  <path d="M0 250v230h230z" />
+  <path d="M514 0a240 240 0 0 0 0 480z" />
+  <circle cx="674" cy="112" r="112" />
+  <path d="M558 250h230v230z" />
+</svg>

@@ -5,7 +5,8 @@ import BookingBar from '../components/BookingBar.astro';
 import CityScenery from '../components/CityScenery.astro';
 import Carousel from '../components/Carousel.astro';
 import ReviewScore from '../components/ReviewScore.astro';
-import RoomCard from '../components/RoomCard.astro';
+import DirectBookingBox from '../components/DirectBookingBox.astro';
+import RoomRail from '../components/RoomRail.astro';
 import OfferCard from '../components/OfferCard.astro';
 import Benefits from '../components/sections/Benefits.astro';
 import Welcome from '../components/sections/Welcome.astro';
@@ -13,8 +14,9 @@ import ActivitiesSection from '../components/sections/ActivitiesSection.astro';
 import LocationSection from '../components/sections/LocationSection.astro';
 import FaqSection from '../components/sections/FaqSection.astro';
 import ContactSection from '../components/sections/ContactSection.astro';
-import { listRooms, listOffers, getSettings, getHomepage } from '../lib/content';
-import { t, localePath, type Locale } from '../lib/i18n';
+import { listRooms, listOffers, getSettings, getHomepage, getDirectBooking } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+import { hotelSchema, graph } from '../lib/schema';
 
 interface Props {
   locale: Locale;
@@ -24,27 +26,58 @@ const tr = t(locale);
 
 const settings = await getSettings();
 const homepage = await getHomepage();
-const rooms = (await listRooms(locale)).slice(0, 6);
+const directBooking = await getDirectBooking(locale);
+// The whole set: the rail loops, so there is no last card to run out of.
+const rooms = await listRooms(locale);
 const offers = await listOffers(locale);
 const mewsConfigId = settings?.mewsConfigId || undefined;
 const siteName = settings?.siteName || 'Hotel Atlantis';
-const tagline = settings?.tagline || 'Sit back, relax and enjoy';
+// No static fallback. Clearing the tagline in Keystatic has to actually clear
+// it, rather than falling back to a line nobody can edit.
+const tagline = String(settings?.tagline ?? '').trim();
+// The checkbox only governs the hero. The text itself, when there is any, still
+// describes the page to search engines and still appears in the footer.
+const showTagline = settings?.showTagline !== false && tagline !== '';
 
-const slides = (homepage?.carousel ?? [])
-  .map((s: any) => {
-    const img = typeof s.image === 'string' ? s.image : '';
-    const src = img.startsWith('/') || img.startsWith('http') ? img : `/images/carousel/${img}`;
-    return { image: src, alt: s.alt || siteName };
-  })
-  .filter((s: any) => s.image);
+const schema = graph([hotelSchema(settings, locale, Astro.site)]);
+
+// Keystatic stores a bare filename for anything uploaded through it and a full
+// path for anything set by hand, so both shapes have to resolve.
+const toSlides = (list: any[], folder: string) =>
+  (list ?? [])
+    .map((s: any) => {
+      const img = typeof s.image === 'string' ? s.image : '';
+      const src = img.startsWith('/') || img.startsWith('http') ? img : `/images/${folder}/${img}`;
+      return { image: src, alt: s.alt || siteName };
+    })
+    .filter((s: any) => s.image);
+
+const slides = toSlides(homepage?.carousel, 'carousel');
+// Populated only while a hero split test is running.
+const slidesB = toSlides((homepage as any)?.carouselB, 'carousel-b');
 ---
 
-<Layout title={siteName} description={tagline} locale={locale} heroHeader={true}>
+<Layout title={siteName} description={tagline} locale={locale} heroHeader={true} schema={schema}>
   {/* Hero */}
   {slides.length > 0 ? (
-    <Carousel slides={slides}>
-      <p class="hero-type text-xs uppercase tracking-[0.35em] text-white/90">{siteName}</p>
-      <h1 class="hero-type mt-5 max-w-3xl font-serif text-5xl leading-[1.05] sm:text-7xl">{tagline}</h1>
+    <Carousel slides={slides} slidesB={slidesB}>
+      {/* No name over the photograph: the wordmark in the header says it, and
+          saying it twice on one screen reads as a mistake. The heading still has
+          to exist, so with the tagline switched off the name stays as a heading
+          for screen readers and search engines without being drawn. */}
+      {!showTagline && <h1 class="sr-only">{siteName}</h1>}
+
+      {/* The tagline reads as an introduction to the booking bar rather than as a
+          caption on the photograph, so it sits with it. Smaller on a narrow
+          screen, where the bar stacks and takes most of the height. */}
+      {showTagline && (
+        <h1
+          slot="bottom-lead"
+          class="hero-type font-serif text-3xl leading-[1.05] sm:text-5xl lg:text-6xl"
+        >
+          {tagline}
+        </h1>
+      )}
       <ReviewScore
         slot="top-right"
         locale={locale}
@@ -52,13 +85,20 @@ const slides = (homepage?.carousel ?? [])
         reviews={settings?.reviewCount}
         source={settings?.reviewSource}
       />
+      <DirectBookingBox slot="top-left" title={directBooking.title} items={directBooking.items} />
       <BookingBar slot="bottom" locale={locale} />
     </Carousel>
   ) : (
     <section class="flex min-h-[70vh] items-center justify-center bg-gradient-to-b from-sand to-paper px-4 text-center">
       <div>
-        <p class="text-xs uppercase tracking-[0.35em] text-clay">{siteName}</p>
-        <h1 class="mt-5 font-serif text-5xl leading-tight sm:text-7xl">{tagline}</h1>
+        {showTagline ? (
+          <>
+            <p class="text-xs uppercase tracking-[0.35em] text-clay">{siteName}</p>
+            <h1 class="mt-5 font-serif text-5xl leading-tight sm:text-7xl">{tagline}</h1>
+          </>
+        ) : (
+          <h1 class="font-serif text-5xl leading-tight sm:text-7xl">{siteName}</h1>
+        )}
         <div class="mt-9"><BookNow configId={mewsConfigId} label={tr.book} location="hero" class="!px-8 !py-3.5" /></div>
       </div>
     </section>
@@ -69,22 +109,7 @@ const slides = (homepage?.carousel ?? [])
   <Welcome locale={locale} />
 
   {/* Rooms */}
-  {rooms.length > 0 && (
-    <section id="rooms" class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
-          <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
-        </div>
-        <a href={localePath(locale, '/rooms')} class="text-sm font-medium text-clay hover:underline">
-          {tr.allRooms} →
-        </a>
-      </div>
-      <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-        {rooms.map((room) => <RoomCard room={room} locale={locale} />)}
-      </div>
-    </section>
-  )}
+  {rooms.length > 0 && <RoomRail rooms={rooms} locale={locale} />}
 
   {/* Offers */}
   {offers.length > 0 && (

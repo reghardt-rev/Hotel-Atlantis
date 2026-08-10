@@ -1,19 +1,31 @@
 ---
 import { t, localePath, stripLocale, locales, localeNames, sections, type Locale } from '../lib/i18n';
+import { translatePath } from '../lib/content';
 import BookNow from './BookNow.astro';
 import Flag from './Flag.astro';
+import SideMenu from './SideMenu.astro';
 
 interface Props {
   locale: Locale;
   siteName: string;
   mewsConfigId?: string;
   overHero?: boolean;
+  /** Passed through to the side menu for its social links. */
+  settings?: any;
 }
-const { locale, siteName, mewsConfigId, overHero = false } = Astro.props;
+const { locale, siteName, mewsConfigId, overHero = false, settings } = Astro.props;
 const tr = t(locale);
 const basePath = stripLocale(Astro.url.pathname);
 const home = localePath(locale, '/');
 const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
+
+// Where each flag goes. Room and activity slugs can be translated, so this is a
+// content lookup rather than just sticking a prefix on the current path.
+const localeHrefs = Object.fromEntries(
+  await Promise.all(
+    locales.map(async (l) => [l, localePath(l, await translatePath(basePath, locale, l))] as const),
+  ),
+) as Record<Locale, string>;
 ---
 
 <header class:list={['site-header', overHero && 'is-hero']} data-site-header data-home={home}>
@@ -24,7 +36,7 @@ const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
       <div class="flex items-center gap-2.5">
         {locales.map((l) => (
           <a
-            href={localePath(l, basePath)}
+            href={localeHrefs[l]}
             aria-label={localeNames[l]}
             title={localeNames[l]}
             class:list={['block transition-opacity', l === locale ? 'opacity-100' : 'opacity-45 hover:opacity-90']}
@@ -46,17 +58,23 @@ const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
           {i.label}
         </a>
       ))}
+      <a href={localePath(locale, '/gallery')} class="transition-opacity hover:opacity-60">
+        {tr.gallery.title}
+      </a>
       <a href={localePath(locale, '/faq')} class="transition-opacity hover:opacity-60">FAQ</a>
     </nav>
 
     <div class="flex items-center gap-3">
       <BookNow configId={mewsConfigId} label={tr.book} location="header" class="hidden sm:inline-flex !px-5 !py-2" />
+      {/* Opens the full site index. Shown at every width: on a narrow screen the
+          bar has no links, and on a wide one this is the way to everything that
+          does not fit in the bar. */}
       <button
         type="button"
         data-menu-toggle
-        aria-label="Menu"
+        aria-label={tr.menu.open}
         aria-expanded="false"
-        class="inline-flex h-10 w-10 items-center justify-center md:hidden"
+        class="inline-flex h-10 w-10 items-center justify-center"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <line x1="3" y1="7" x2="21" y2="7" />
@@ -67,32 +85,9 @@ const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
     </div>
   </div>
 
-  <!-- Mobile panel -->
-  <div data-mobile-menu class="hidden bg-paper text-ink shadow-lg md:hidden">
-    <nav class="mx-auto flex max-w-6xl flex-col px-4 py-3 text-sm">
-      {navItems.map((i) => (
-        <a href={`#${i.id}`} data-section-link data-section={i.id} data-menu-link class="rounded px-2 py-2.5 hover:bg-sand">
-          {i.label}
-        </a>
-      ))}
-      <a href={localePath(locale, '/faq')} data-menu-link class="rounded px-2 py-2.5 hover:bg-sand">FAQ</a>
-      <div class="px-2 pt-3">
-        <BookNow configId={mewsConfigId} label={tr.book} location="mobile_menu" class="w-full justify-center" />
-      </div>
-      <div class="flex gap-3 px-2 pt-4">
-        {locales.map((l) => (
-          <a
-            href={localePath(l, basePath)}
-            aria-label={localeNames[l]}
-            title={localeNames[l]}
-            class:list={['transition-opacity', l === locale ? 'opacity-100' : 'opacity-45 hover:opacity-90']}
-          >
-            <Flag locale={l} class={l === locale ? 'h-4 w-6 ring-2 ring-clay' : 'h-4 w-6'} />
-          </a>
-        ))}
-      </div>
-    </nav>
-  </div>
+  {/* The side panel replaces what used to be a separate mobile-only dropdown:
+      one menu, at every width, listing the whole site rather than just the bar. */}
+  <SideMenu locale={locale} siteName={siteName} mewsConfigId={mewsConfigId} settings={settings} />
 </header>
 
 <script>
@@ -118,14 +113,55 @@ const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
     });
   });
 
-  // Mobile menu toggle.
+  // Side menu.
   const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
-  const menu = document.querySelector<HTMLElement>('[data-mobile-menu]');
-  toggle?.addEventListener('click', () => {
-    const open = menu?.classList.toggle('hidden');
-    toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
-  });
-  document.querySelectorAll('[data-menu-link]').forEach((l) =>
-    l.addEventListener('click', () => menu?.classList.add('hidden')),
-  );
+  const menu = document.querySelector<HTMLElement>('[data-side-menu]');
+
+  if (toggle && menu) {
+    const panel = menu.querySelector<HTMLElement>('.side-menu__panel')!;
+    const closeBtn = menu.querySelector<HTMLButtonElement>('[data-menu-close]')!;
+
+    function openMenu() {
+      menu!.setAttribute('data-open', '');
+      toggle!.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      closeBtn.focus();
+    }
+
+    function closeMenu() {
+      menu!.removeAttribute('data-open');
+      toggle!.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      toggle!.focus();
+    }
+
+    const isOpen = () => menu.hasAttribute('data-open');
+
+    toggle.addEventListener('click', () => (isOpen() ? closeMenu() : openMenu()));
+    closeBtn.addEventListener('click', closeMenu);
+    menu.querySelector('[data-menu-backdrop]')?.addEventListener('click', closeMenu);
+
+    // Following a link inside the panel should leave the panel shut behind you.
+    // Same-page section links do not reload, so nothing else would close it.
+    menu.querySelectorAll('[data-menu-link]').forEach((l) => l.addEventListener('click', closeMenu));
+
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen()) return;
+      if (e.key === 'Escape') {
+        closeMenu();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      // Keep Tab inside the panel rather than letting it walk the page behind.
+      const stops = Array.from(
+        panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((el) => el.offsetParent !== null);
+      if (stops.length === 0) return;
+      const edge = e.shiftKey ? stops[0] : stops[stops.length - 1];
+      if (document.activeElement === edge) {
+        e.preventDefault();
+        (e.shiftKey ? stops[stops.length - 1] : stops[0]).focus();
+      }
+    });
+  }
 </script>

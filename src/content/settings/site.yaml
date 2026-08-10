@@ -1,10 +1,12 @@
 siteName: Hotel Atlantis
 tagline: See the city as a local
+showTagline: false
 reviewScore: 7.4
 reviewCount: 3330
 reviewSource: Booking.com
 mewsConfigId: 134994b4-22c4-48b7-9740-afb700a2d280
 gtmContainerId: GTM-PXH35MWM
+ga4MeasurementId: G-Q0S89VXCXP
 email: info@hotelatlantisamsterdam.com
 phone: +31 20 3640034
 address: |-

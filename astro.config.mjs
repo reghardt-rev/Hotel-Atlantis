@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import cloudflare from '@astrojs/cloudflare';
 import node from '@astrojs/node';
 import react from '@astrojs/react';
-import keystatic from '@keystatic/astro';
+import keystatic from './keystatic-integration.mjs';
 
 // The `astro dev` server runs Keystatic's admin/API routes through the adapter.
 // The Cloudflare (workerd) dev runner can't run Keystatic's server code, so we
@@ -40,6 +40,8 @@ export default defineConfig({
       cloudflare({ prerenderEnvironment: 'node' }),
 
   // react() is required by @keystatic/astro (the admin UI is React).
-  // keystatic() injects /keystatic (admin) and /api/keystatic/* (server routes).
+  // Keystatic's integration, minus the API route it would inject: that handler
+  // reads an Astro API removed in v7 and 500s on Cloudflare. The route lives in
+  // src/pages/api/keystatic/[...params].ts instead.
   integrations: [react(), keystatic()],
 });
