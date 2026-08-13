@@ -4,7 +4,7 @@ import Logo from './Logo.astro';
 import RevenueGuruMark from './RevenueGuruMark.astro';
 import { socialLinks } from '../lib/social';
 import { partners, collectionHref } from '../lib/partners';
-import { t, localePath, sectionHref, sections, type Locale } from '../lib/i18n';
+import { t, localePath, type Locale } from '../lib/i18n';
 
 interface Props {
   locale: Locale;
@@ -14,9 +14,27 @@ const { locale, settings } = Astro.props;
 const tr = t(locale);
 const year = new Date().getFullYear();
 const siteName = settings?.siteName ?? 'Hotel Atlantis';
-const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: tr.nav[id] }));
 const links = socialLinks(settings);
 const sisterHotels = partners(locale);
+
+// Every page the footer offers, in the order a visitor would work through them:
+// what you book, what surrounds it, then the practical and the legal. Rooms,
+// offers, activities and contact were previously homepage anchors; they are the
+// same destinations as pages, which is what a footer should link to.
+const footerLinks = [
+  { href: localePath(locale, '/rooms'), label: tr.nav.rooms },
+  { href: localePath(locale, '/offers'), label: tr.nav.offers },
+  { href: localePath(locale, '/facilities'), label: tr.facilities.title },
+  { href: localePath(locale, '/activities'), label: tr.nav.activities },
+  { href: localePath(locale, '/amsterdam'), label: tr.nav.location },
+  { href: localePath(locale, '/gallery'), label: tr.gallery.title },
+  { href: localePath(locale, '/about'), label: tr.about },
+  { href: localePath(locale, '/sustainability'), label: tr.sustainability },
+  { href: localePath(locale, '/contact'), label: tr.nav.contact },
+  { href: localePath(locale, '/faq'), label: 'FAQ' },
+  { href: localePath(locale, '/terms'), label: tr.terms },
+  { href: localePath(locale, '/privacy'), label: tr.privacy },
+];
 ---
 
 <footer class="bg-ink text-paper">
@@ -36,7 +54,7 @@ const sisterHotels = partners(locale);
         >
           {tr.partners}
         </a>
-        <ul class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <ul class="mt-3 space-y-1 text-sm">
           {sisterHotels.map((hotel) => (
             <li>
               <a
@@ -53,29 +71,16 @@ const sisterHotels = partners(locale);
       </div>
     </div>
 
+    {/* Pages only. The homepage section anchors this column used to carry are
+        the menu bar's job: from a page other than the homepage they navigate
+        away and jump, which is not what a footer link should do. Each anchor
+        that had a real page behind it keeps its place here as that page. */}
     <nav class="space-y-2 text-sm">
-      {navItems.map((i) => (
-        <a href={i.href} class="block text-paper/80 transition-colors hover:text-paper">{i.label}</a>
+      {footerLinks.map((link) => (
+        <a href={link.href} class="block text-paper/80 transition-colors hover:text-paper">
+          {link.label}
+        </a>
       ))}
-      <a href={localePath(locale, '/rooms')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.allRooms}
-      </a>
-      <a href={localePath(locale, '/facilities')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.facilities.title}
-      </a>
-      <a href={localePath(locale, '/amsterdam')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.nav.location}
-      </a>
-      <a href={localePath(locale, '/contact')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.nav.contact}
-      </a>
-      <a href={localePath(locale, '/terms')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.terms}
-      </a>
-      <a href={localePath(locale, '/faq')} class="block text-paper/80 transition-colors hover:text-paper">FAQ</a>
-      <a href={localePath(locale, '/privacy')} class="block text-paper/80 transition-colors hover:text-paper">
-        {tr.privacy}
-      </a>
     </nav>
 
     <div class="space-y-1 text-sm text-paper/80">
