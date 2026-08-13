@@ -119,7 +119,20 @@ function offersCollection(locale: Locale) {
     schema: {
       title: fields.slug({ name: { label: 'Offer title' } }),
       image: image('Image', 'offers'),
+      imageAlt: fields.text({
+        label: 'Photo description',
+        description: 'What the photo shows, for screen readers. Falls back to the offer title.',
+        validation: { isRequired: false },
+      }),
       summary: fields.text({ label: 'Summary', multiline: true }),
+      /* What the offer actually includes, one short line each. Shown as a list
+         on the offer tile; where an offer has none, the summary is shown
+         instead, so an offer written before the list exists still reads. */
+      highlights: fields.array(fields.text({ label: 'Item' }), {
+        label: "What's included",
+        description: 'Short lines, e.g. "10% off the room rate".',
+        itemLabel: (props) => props.value || 'Item',
+      }),
       validFrom: fields.date({ label: 'Valid from', validation: { isRequired: false } }),
       validTo: fields.date({ label: 'Valid to', validation: { isRequired: false } }),
       priceFrom: fields.integer({ label: 'From (€)', validation: { isRequired: false } }),

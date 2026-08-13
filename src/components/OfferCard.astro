@@ -1,4 +1,12 @@
 ---
+/**
+ * One offer, as a card with its photograph on top.
+ *
+ * The image is optional. An offer written in Keystatic before its photograph
+ * exists falls back to a tinted gradient rather than a broken frame or a
+ * collapsed card, which is what makes it safe to publish one the moment the
+ * copy is ready.
+ */
 import BookNow from './BookNow.astro';
 import { t, type Locale } from '../lib/i18n';
 
@@ -12,15 +20,48 @@ const tr = t(locale);
 const e = offer.entry;
 ---
 
-<article class="flex flex-col rounded-lg border border-stone-warm bg-white p-7">
-  <h3 class="font-serif text-2xl">{e.title}</h3>
-  {e.summary && <p class="mt-3 flex-1 text-sm leading-relaxed text-muted">{e.summary}</p>}
-  <div class="mt-6 flex items-center justify-between gap-3">
-    {e.priceFrom != null ? (
-      <span class="text-sm text-ink">{tr.from} €{e.priceFrom}</span>
-    ) : (
-      <span></span>
+<article class="flex flex-col overflow-hidden rounded-lg border border-stone-warm bg-white">
+  {/* 4:3 in a three-column grid, matching RoomCard, so an offer tile and a room
+      tile are the same object at the same size. Fixed aspect so a row keeps its
+      rhythm whatever the photographs
+      happen to be shaped like. */}
+  <div class="aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
+    {e.image && (
+      <img
+        src={e.image}
+        alt={e.imageAlt || e.title}
+        loading="lazy"
+        decoding="async"
+        class="h-full w-full object-cover"
+      />
     )}
-    <BookNow configId={mewsConfigId} label={tr.book} location="offer_card" class="!px-4 !py-2" />
+  </div>
+
+  <div class="flex flex-1 flex-col p-7">
+    <h3 class="font-serif text-2xl">{e.title}</h3>
+
+    {/* The list is what the offer is, so it leads. The summary stands in only
+        where an offer has no list yet, rather than printing both and making a
+        small tile carry the same thing twice. */}
+    {e.highlights?.length > 0 ? (
+      <ul class="mt-4 flex-1 space-y-1.5 text-sm text-muted">
+        {e.highlights.map((item: string) => (
+          <li class="flex gap-2">
+            <span class="mt-2 h-1 w-1 shrink-0 rounded-full bg-clay" aria-hidden="true"></span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      e.summary && <p class="mt-3 flex-1 text-sm leading-relaxed text-muted">{e.summary}</p>
+    )}
+    <div class="mt-6 flex items-center justify-between gap-3">
+      {e.priceFrom != null ? (
+        <span class="text-sm text-ink">{tr.from} €{e.priceFrom}</span>
+      ) : (
+        <span></span>
+      )}
+      <BookNow configId={mewsConfigId} label={tr.book} location="offer_card" class="!px-4 !py-2" />
+    </div>
   </div>
 </article>
