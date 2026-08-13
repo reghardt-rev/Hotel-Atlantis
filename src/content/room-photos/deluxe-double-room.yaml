@@ -1,8 +1,6 @@
 name: Deluxe Double Room with Balcony
 heroImage: /images/rooms/deluxe-double-room/heroImage.jpg
 images:
-  - image: /images/rooms/deluxe-double-room/images/0/image.jpg
-    alt: 'A double bed beside open balcony doors'
   - image: /images/rooms/deluxe-double-room/images/1/image.jpg
     alt: 'The balcony doors open onto two chairs and the trees beyond'
   - image: /images/rooms/deluxe-double-room/images/2/image.jpg

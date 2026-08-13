@@ -1,0 +1,29 @@
+---
+/**
+ * Amsterdam. The body lives in the shared `pages` collection under the slug
+ * `amsterdam`, so staff can edit it in Keystatic without a code change, the
+ * same way About us and Sustainability work.
+ *
+ * The homepage keeps its own short Amsterdam section and the menu bar still
+ * scrolls to it; this is the long version for anyone who wants it.
+ */
+import Layout from '../layouts/Layout.astro';
+import IllustratedPage from '../components/IllustratedPage.astro';
+import { getPage, renderMarkdoc } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const page = await getPage(locale, 'amsterdam');
+const body = page ? await renderMarkdoc(page.content) : '';
+const title = page?.title || tr.nav.location;
+const photos = ((page as any)?.sideImages ?? []) as { image: string; alt?: string }[];
+---
+
+<Layout title={title} description={page?.seoDescription || ''} locale={locale}>
+  <IllustratedPage title={title} body={body} photos={photos} />
+</Layout>

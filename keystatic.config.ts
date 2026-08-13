@@ -130,6 +130,51 @@ function offersCollection(locale: Locale) {
 }
 
 /**
+ * The things the hotel offers rather than the things to go and do: breakfast,
+ * reception, bikes. Built like activities, with two differences.
+ *
+ * There is no `publishedAt`, because a facility is not news and its position on
+ * the page should be a decision rather than a side effect of when it was
+ * written, so they sort on `order` like the rooms and offers do.
+ *
+ * The slug is deliberately left the same in all three languages while the title
+ * is translated. Facility slugs are therefore identical across locales, which is
+ * what lets the language switcher carry /facilities/breakfast straight over to
+ * /nl/facilities/breakfast without a translationKey lookup. Renaming one in
+ * Keystatic will break that link for that language, so rename all three.
+ */
+function facilitiesCollection(locale: Locale) {
+  return collection({
+    label: `Facilities \u00b7 ${LOCALE_LABEL[locale]}`,
+    path: `src/content/facilities/${locale}/*`,
+    slugField: 'title',
+    format: { contentField: 'content' },
+    columns: ['title'],
+    entryLayout: 'content',
+    schema: {
+      title: fields.slug({ name: { label: 'Facility title' } }),
+      image: image('Image', 'facilities'),
+      imageAlt: fields.text({
+        label: 'Photo description',
+        description: 'What the photo actually shows, for screen readers.',
+        validation: { isRequired: false },
+      }),
+      summary: fields.text({ label: 'Summary', multiline: true }),
+      /* Two or three at most. They are set in the collage tile under the title,
+         so a long list stops being scannable and starts being a paragraph. */
+      highlights: fields.array(fields.text({ label: 'Highlight' }), {
+        label: 'Key facts',
+        description: 'Short lines shown on the collage tile, e.g. "Breakfast 07:00 - 10:30".',
+        itemLabel: (props) => props.value || 'Fact',
+      }),
+      order: fields.integer({ label: 'Sort order', defaultValue: 0 }),
+      draft: fields.checkbox({ label: 'Draft (hide from the site)', defaultValue: false }),
+      content: fields.markdoc({ label: 'Details' }),
+    },
+  });
+}
+
+/**
  * Activities are dated articles. The newest published one is featured on the
  * homepage; the rest live on /activities.
  */
@@ -282,9 +327,9 @@ export default config({
     navigation: {
       Settings: ['settings', 'homepage'],
       Shared: ['roomPhotos'],
-      English: ['rooms_en', 'offers_en', 'activities_en', 'news_en', 'pages_en', 'gallery_en', 'directBooking_en'],
-      Nederlands: ['rooms_nl', 'offers_nl', 'activities_nl', 'news_nl', 'pages_nl', 'gallery_nl', 'directBooking_nl'],
-      Deutsch: ['rooms_de', 'offers_de', 'activities_de', 'news_de', 'pages_de', 'gallery_de', 'directBooking_de'],
+      English: ['rooms_en', 'offers_en', 'facilities_en', 'activities_en', 'news_en', 'pages_en', 'gallery_en', 'directBooking_en'],
+      Nederlands: ['rooms_nl', 'offers_nl', 'facilities_nl', 'activities_nl', 'news_nl', 'pages_nl', 'gallery_nl', 'directBooking_nl'],
+      Deutsch: ['rooms_de', 'offers_de', 'facilities_de', 'activities_de', 'news_de', 'pages_de', 'gallery_de', 'directBooking_de'],
     },
   },
 
@@ -409,6 +454,9 @@ export default config({
     activities_en: activitiesCollection('en'),
     activities_nl: activitiesCollection('nl'),
     activities_de: activitiesCollection('de'),
+    facilities_en: facilitiesCollection('en'),
+    facilities_nl: facilitiesCollection('nl'),
+    facilities_de: facilitiesCollection('de'),
     news_en: newsCollection('en'),
     news_nl: newsCollection('nl'),
     news_de: newsCollection('de'),

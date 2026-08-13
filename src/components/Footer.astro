@@ -1,7 +1,9 @@
 ---
 import SocialIcon from './SocialIcon.astro';
+import Logo from './Logo.astro';
 import RevenueGuruMark from './RevenueGuruMark.astro';
 import { socialLinks } from '../lib/social';
+import { partners, collectionHref } from '../lib/partners';
 import { t, localePath, sectionHref, sections, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -14,13 +16,41 @@ const year = new Date().getFullYear();
 const siteName = settings?.siteName ?? 'Hotel Atlantis';
 const navItems = sections.map((id) => ({ href: sectionHref(locale, id), label: tr.nav[id] }));
 const links = socialLinks(settings);
+const sisterHotels = partners(locale);
 ---
 
 <footer class="bg-ink text-paper">
   <div class="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 lg:grid-cols-4">
     <div class="lg:col-span-2">
-      <p class="font-serif text-3xl">{siteName}</p>
+      <Logo siteName={siteName} variant="light" class="h-20" />
       {settings?.tagline && <p class="mt-3 max-w-sm text-sm text-paper/70">{settings.tagline}</p>}
+
+      {/* The other houses in the group. External, so they open away from the
+          booking flow rather than navigating out of it. */}
+      <div class="mt-8">
+        <a
+          href={collectionHref(locale)}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs uppercase tracking-[0.2em] text-paper/50 transition-colors hover:text-paper/80"
+        >
+          {tr.partners}
+        </a>
+        <ul class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+          {sisterHotels.map((hotel) => (
+            <li>
+              <a
+                href={hotel.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-paper/80 transition-colors hover:text-paper"
+              >
+                {hotel.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
 
     <nav class="space-y-2 text-sm">
@@ -29,6 +59,18 @@ const links = socialLinks(settings);
       ))}
       <a href={localePath(locale, '/rooms')} class="block text-paper/80 transition-colors hover:text-paper">
         {tr.allRooms}
+      </a>
+      <a href={localePath(locale, '/facilities')} class="block text-paper/80 transition-colors hover:text-paper">
+        {tr.facilities.title}
+      </a>
+      <a href={localePath(locale, '/amsterdam')} class="block text-paper/80 transition-colors hover:text-paper">
+        {tr.nav.location}
+      </a>
+      <a href={localePath(locale, '/contact')} class="block text-paper/80 transition-colors hover:text-paper">
+        {tr.nav.contact}
+      </a>
+      <a href={localePath(locale, '/terms')} class="block text-paper/80 transition-colors hover:text-paper">
+        {tr.terms}
       </a>
       <a href={localePath(locale, '/faq')} class="block text-paper/80 transition-colors hover:text-paper">FAQ</a>
       <a href={localePath(locale, '/privacy')} class="block text-paper/80 transition-colors hover:text-paper">

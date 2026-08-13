@@ -21,7 +21,6 @@ const testing = slidesB.length > 0;
 const dotCount = Math.max(slides.length, slidesB.length);
 const hasBottom = Astro.slots.has('bottom');
 const hasTopRight = Astro.slots.has('top-right');
-const hasTopLeft = Astro.slots.has('top-left');
 
 // `Astro.slots.has` reports true whenever the caller mentions the slot at all,
 // including when the expression behind it rendered nothing — so the content is
@@ -96,37 +95,20 @@ const bottomLead = Astro.slots.has('bottom-lead')
     <!-- vignette + legibility wash -->
     <div class="hero-overlay absolute inset-0"></div>
 
-    {/* Clear of the fixed header. Placed before the content column so the
-        calendar, which opens upward out of the booking bar, is painted over
-        these rather than under them.
+    {/* Clear of the fixed header, and sharing the booking bar's max-width so the
+        two overlays line up on the same right-hand edge. Used for the ratings.
+        Placed before the content column so the calendar, which opens upward out
+        of the booking bar, is painted over these rather than under them. */}
+    {hasTopRight && (
+      <div class="absolute inset-x-0 top-30 z-20 px-4 md:top-40">
+        {/* A column, so several overlays stack down the right edge rather than
+            spreading along it: the rating, then the direct-booking box.
 
-        The two panels are deliberately hung on *different* measures rather than
-        on one shared frame. Given a common edge they draw a rail down each side
-        of the hero, and on a wide screen that rail lands exactly where the
-        content column ends and the gutter begins, so the same line gets stated
-        three times over. Staggered, no two vertical edges on the hero repeat:
-        the direct-booking box shares the booking bar's `max-w-5xl` and so reads
-        as belonging to it, while the rating sits out at `max-w-7xl`, past the
-        column and into the gutter.
-
-        One grid cell holds both, which is what lets each keep its own width and
-        still start at the same height. Below `sm` the placement is dropped, the
-        two auto-place into rows instead, and they stack against the right edge:
-        at that width the pair is far too wide to share a line. `top-right` leads
-        in the DOM so the rating, the shorter of the two, heads that stack. */}
-    {(hasTopLeft || hasTopRight) && (
-      <div class="absolute inset-x-0 top-28 z-20 grid gap-3">
-        <div class="mx-auto flex w-full max-w-7xl justify-end px-4 sm:col-start-1 sm:row-start-1">
-          {/* Columns, so several overlays can stack in one corner rather than
-              spreading along the top edge. */}
-          <div class="flex flex-col items-end gap-3">
-            <slot name="top-right" />
-          </div>
-        </div>
-        <div class="mx-auto flex w-full max-w-5xl justify-end px-4 sm:col-start-1 sm:row-start-1 sm:justify-start">
-          <div class="flex flex-col items-end gap-3 sm:items-start">
-            <slot name="top-left" />
-          </div>
+            Tagged for the fitting script below, which shrinks the whole column
+            as one when a short screen would otherwise run it into the booking
+            bar. Scaling the column rather than each box keeps them aligned. */}
+        <div class="mx-auto flex max-w-5xl flex-col items-end gap-3" data-hero-overlays>
+          <slot name="top-right" />
         </div>
       </div>
     )}
@@ -137,7 +119,7 @@ const bottomLead = Astro.slots.has('bottom-lead')
         than on the whole photograph. On a short phone the bar and tagline eat
         most of the hero, and centring on the photograph would drop the name
         straight on top of them. */}
-    <div class="absolute inset-0 z-20 flex flex-col px-4 pb-20 pt-28 text-white sm:pb-24">
+    <div class="absolute inset-0 z-20 flex flex-col px-4 pb-20 pt-30 text-white sm:pb-24 md:pt-40">
       <div class="flex flex-1 items-center justify-center text-center">
         <slot />
       </div>
@@ -203,6 +185,59 @@ const bottomLead = Astro.slots.has('bottom-lead')
       /* analytics must never break the page */
     }
     track('experiment_view', { experiment_id: experiment });
+  }
+
+  /* ---- Keep the hero overlays off the booking bar --------------------------
+   * The rating and the direct-booking box are absolutely positioned from the
+   * top of the hero, and the booking bar is positioned from the bottom of it.
+   * On a tall phone they never meet. On a short one they do, and a landscape
+   * phone is the worst of both: wide enough that the two panels sit side by
+   * side, short enough that they reach the bar anyway.
+   *
+   * Rather than pick a breakpoint and hope, the grid is measured against the
+   * bar and scaled down by exactly as much as it takes to clear it. Anything
+   * that changes either height re-runs it, which on a phone mostly means the
+   * address bar collapsing and dvh changing under us.
+   */
+  {
+    const overlays = document.querySelector<HTMLElement>('[data-hero-overlays]');
+    const bar = document.querySelector<HTMLElement>('[data-booking-bar]');
+
+    if (overlays && bar) {
+      const MIN_GAP = 16; // px of daylight to leave between the two
+      const FLOOR = 0.55; // below this the type stops being readable anyway
+
+      function fit() {
+        // Measure at natural size: a rect read while scaled would feed the last
+        // scale back into the next one and creep smaller on every resize.
+        overlays!.style.transform = '';
+        void overlays!.offsetWidth;
+
+        const col = overlays!.getBoundingClientRect();
+        const barRect = bar!.getBoundingClientRect();
+        if (col.height <= 0) return;
+
+        const room = barRect.top - MIN_GAP - col.top;
+        const scale = Math.min(1, Math.max(FLOOR, room / col.height));
+        if (scale < 0.999) overlays!.style.transform = `scale(${scale.toFixed(3)})`;
+      }
+
+      let queued = false;
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          fit();
+        });
+      };
+
+      window.addEventListener('resize', schedule, { passive: true });
+      window.addEventListener('orientationchange', schedule, { passive: true });
+      // Web fonts land after first paint and change both heights.
+      document.fonts?.ready.then(schedule).catch(() => {});
+      fit();
+    }
   }
 
   document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {

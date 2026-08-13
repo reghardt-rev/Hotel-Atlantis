@@ -1,0 +1,113 @@
+---
+/**
+ * Contact. The details come from site settings, so the address, phone and email
+ * are the same here as in the footer and the structured data and cannot drift.
+ * The directions prose lives in the shared `pages` collection under the slug
+ * `contact`, so staff can edit it in Keystatic.
+ *
+ * The map is click-to-load on purpose. A Google Maps iframe reaches Google the
+ * moment the page renders and sets cookies there, which would put third-party
+ * tracking on a page a Dutch and German audience reaches before the cookie
+ * banner has been answered. Nothing is requested from Google until someone asks
+ * for the map, and the button says what it will do. The static fallback is a
+ * plain link out to Maps, which costs the visitor nothing.
+ */
+import Layout from '../layouts/Layout.astro';
+import { getSettings, getPage, renderMarkdoc } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+import { hotelSchema, graph } from '../lib/schema';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const settings = await getSettings();
+const page = await getPage(locale, 'contact');
+const body = page ? await renderMarkdoc(page.content) : '';
+const title = page?.title || tr.nav.contact;
+
+const address = settings?.address ?? '';
+const query = encodeURIComponent([settings?.siteName, address.replace(/\n/g, ', ')].filter(Boolean).join(', '));
+const embedSrc = `https://www.google.com/maps?q=${query}&output=embed`;
+const mapsLink = `https://www.google.com/maps/search/?api=1&query=${query}`;
+
+const schema = graph([hotelSchema(settings, locale, Astro.site)]);
+---
+
+<Layout title={title} description={page?.seoDescription || ''} locale={locale} schema={schema}>
+  <section class="mx-auto max-w-6xl px-4 py-16">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.contact}</p>
+    <h1 class="mt-3 font-serif text-5xl">{tr.contact.heading}</h1>
+
+    <div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div>
+        <h2 class="font-serif text-2xl">{tr.contact.details}</h2>
+        <div class="mt-4 space-y-2 text-muted">
+          {address && <p class="whitespace-pre-line">{address}</p>}
+          {settings?.phone && (
+            <p><a href={`tel:${settings.phone}`} class="hover:text-ink">{settings.phone}</a></p>
+          )}
+          {settings?.email && (
+            <p><a href={`mailto:${settings.email}`} class="hover:text-ink">{settings.email}</a></p>
+          )}
+        </div>
+        <a
+          href={mapsLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-5 inline-block text-sm font-medium text-clay hover:underline"
+        >
+          {tr.contact.directions} →
+        </a>
+      </div>
+
+      {/* Nothing here talks to Google until the button is pressed. */}
+      <figure
+        class="relative flex min-h-80 items-center justify-center overflow-hidden rounded-xl border border-stone-warm bg-sand"
+        data-map
+        data-src={embedSrc}
+        data-title={tr.contact.mapTitle}
+      >
+        <div class="px-6 py-10 text-center" data-map-prompt>
+          <button
+            type="button"
+            data-map-load
+            class="cursor-pointer rounded-full bg-clay px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-clay-dark"
+          >
+            {tr.contact.showMap}
+          </button>
+          <p class="mx-auto mt-3 max-w-xs text-xs text-muted">{tr.contact.mapNote}</p>
+        </div>
+      </figure>
+    </div>
+
+    {body && (
+      <div class="mt-16 border-t border-stone-warm pt-12">
+        <h2 class="font-serif text-3xl">{tr.contact.gettingHere}</h2>
+        <div class="rich mt-6 max-w-3xl text-ink" set:html={body} />
+      </div>
+    )}
+  </section>
+</Layout>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-map]').forEach((figure) => {
+    const button = figure.querySelector<HTMLButtonElement>('[data-map-load]');
+    const prompt = figure.querySelector<HTMLElement>('[data-map-prompt]');
+
+    button?.addEventListener('click', () => {
+      const frame = document.createElement('iframe');
+      frame.src = figure.dataset.src ?? '';
+      frame.title = figure.dataset.title ?? '';
+      frame.loading = 'lazy';
+      // The map is a convenience, not the content: keeping it out of the tab
+      // order stops it swallowing focus on the way to the directions below.
+      frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+      frame.className = 'absolute inset-0 h-full w-full border-0';
+      figure.appendChild(frame);
+      prompt?.remove();
+    });
+  });
+</script>

@@ -1,0 +1,41 @@
+---
+/**
+ * Terms & conditions. The body lives in the shared `pages` collection under the
+ * slug `terms`, so staff (or a lawyer) can edit it in Keystatic without a code
+ * change, the same way the privacy policy works.
+ *
+ * The text is a draft assembled from what the hotel already publishes: its rates,
+ * cancellation conditions and house rules. It carries a review banner and several
+ * TO COMPLETE markers for the details only the hotel holds, and it needs a lawyer
+ * before it is relied on.
+ *
+ * It exists in English only. The Dutch and German pages carry the same English
+ * text behind a short note in their own language rather than a translation this
+ * site invented: a mistranslated clause in binding terms is worse than reading
+ * them in a second language.
+ */
+import Layout from '../layouts/Layout.astro';
+import { getPage, renderMarkdoc } from '../lib/content';
+import { t, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+
+const page = await getPage(locale, 'terms');
+const body = page ? await renderMarkdoc(page.content) : '';
+const title = page?.title || tr.terms;
+---
+
+<Layout title={title} description={page?.seoDescription || ''} locale={locale}>
+  <article class="mx-auto max-w-3xl px-4 py-16">
+    <h1 class="font-serif text-5xl">{title}</h1>
+    {body ? (
+      <div class="rich mt-8 text-ink" set:html={body} />
+    ) : (
+      <p class="mt-8 text-muted">—</p>
+    )}
+  </article>
+</Layout>

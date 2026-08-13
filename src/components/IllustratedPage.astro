@@ -1,0 +1,81 @@
+---
+/**
+ * A long editorial page: prose split at its headings, with photographs sitting
+ * beside some of the parts and alternating sides down the page.
+ *
+ * The photographs are spread across the sections rather than filling them from
+ * the top, so three photos and five sections put them against the first, middle
+ * and last. That reads as a rhythm instead of a block of pictures followed by a
+ * wall of text.
+ *
+ * Extracted from the sustainability page so a second long editorial page can
+ * have the same treatment without a second copy of the splitting logic.
+ */
+export interface SidePhoto {
+  image: string;
+  alt?: string;
+}
+
+interface Props {
+  title: string;
+  /** Rendered markdoc HTML. */
+  body: string;
+  photos?: SidePhoto[];
+}
+const { title, body, photos: given = [] } = Astro.props;
+
+// Markdoc's html renderer wraps the whole body in an <article>. That wrapper has
+// to come off before splitting, or the bare opening tag becomes a chunk of its
+// own, takes the first photograph with it, and leaves the tag unclosed.
+const unwrapped = body.replace(/^\s*<article>/, '').replace(/<\/article>\s*$/, '');
+
+// Our own renderer produced this, so the heading boundary is predictable.
+const sections = unwrapped.split(/(?=<h2)/).filter((s) => s.trim());
+
+// Never more photos than there are sections to hang them on.
+const photos = given.filter((p) => p?.image).slice(0, sections.length);
+
+// Keyed by section, but each photo remembers its own position in the run: the
+// sides have to alternate by photograph, not by section. Spreading them lands
+// them on every other section, so keying the flip off the section index would
+// put every one of them on the same side.
+const photoAt = new Map<number, SidePhoto & { ordinal: number }>();
+photos.forEach((photo, i) => {
+  const slot = photos.length === 1 ? 0 : Math.round((i * (sections.length - 1)) / (photos.length - 1));
+  photoAt.set(slot, { ...photo, ordinal: i });
+});
+---
+
+<article class="mx-auto max-w-6xl px-4 py-16">
+  <h1 class="mx-auto max-w-3xl font-serif text-5xl">{title}</h1>
+
+  {sections.length === 0 ? (
+    <p class="mx-auto mt-8 max-w-3xl text-muted">—</p>
+  ) : (
+    <div class="mt-10 space-y-14 sm:space-y-20">
+      {sections.map((html, i) => {
+        const photo = photoAt.get(i);
+        if (!photo) {
+          return <div class="rich mx-auto max-w-3xl text-ink" set:html={html} />;
+        }
+        // Every other photograph swaps to the left, so the columns alternate
+        // down the page rather than stacking against one edge.
+        const flip = photo.ordinal % 2 === 1;
+        return (
+          <div class="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+            <div class:list={['rich text-ink', flip && 'lg:order-2']} set:html={html} />
+            <figure class:list={['lg:mt-0', flip && 'lg:order-1']}>
+              <img
+                src={photo.image}
+                alt={photo.alt || ''}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                class="aspect-[4/3] w-full rounded-xl bg-sand object-cover"
+              />
+            </figure>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</article>

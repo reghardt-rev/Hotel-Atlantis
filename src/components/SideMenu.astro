@@ -11,6 +11,7 @@
  */
 import BookNow from './BookNow.astro';
 import SocialIcon from './SocialIcon.astro';
+import Logo from './Logo.astro';
 import { t, localePath, sectionHref, sections, type Locale } from '../lib/i18n';
 import { socialLinks } from '../lib/social';
 
@@ -35,10 +36,14 @@ const primary = [
 const secondary = [
   { href: localePath(locale, '/rooms'), label: tr.allRooms },
   { href: localePath(locale, '/activities'), label: tr.allActivities },
+  { href: localePath(locale, '/facilities'), label: tr.facilities.title },
+  { href: localePath(locale, '/amsterdam'), label: tr.nav.location },
+  { href: localePath(locale, '/contact'), label: tr.nav.contact },
   { href: localePath(locale, '/about'), label: tr.about },
   { href: localePath(locale, '/sustainability'), label: tr.sustainability },
   { href: localePath(locale, '/socials'), label: tr.socials },
   { href: localePath(locale, '/privacy'), label: tr.privacy },
+  { href: localePath(locale, '/terms'), label: tr.terms },
 ];
 ---
 
@@ -47,8 +52,9 @@ const secondary = [
 
   <aside class="side-menu__panel" role="dialog" aria-modal="true" aria-label={tr.menu.open}>
     <div class="flex items-center justify-between border-b border-stone-warm px-6 py-4">
-      <a href={localePath(locale, '/')} data-menu-link class="font-serif text-2xl tracking-wide">
-        {siteName}
+      <a href={localePath(locale, '/')} data-menu-link>
+        {/* 44px: too small for the third line of the full lockup. */}
+        <Logo siteName={siteName} variant="dark" lockup="compact" class="h-11" />
       </a>
       <button type="button" class="side-menu__close" data-menu-close aria-label={tr.menu.close}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true">

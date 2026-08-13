@@ -85,7 +85,7 @@ const slidesB = toSlides((homepage as any)?.carouselB, 'carousel-b');
         reviews={settings?.reviewCount}
         source={settings?.reviewSource}
       />
-      <DirectBookingBox slot="top-left" title={directBooking.title} items={directBooking.items} />
+      <DirectBookingBox slot="top-right" title={directBooking.title} items={directBooking.items} />
       <BookingBar slot="bottom" locale={locale} />
     </Carousel>
   ) : (

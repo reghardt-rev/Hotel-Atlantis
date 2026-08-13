@@ -1,0 +1,18 @@
+---
+import FacilityDetailView from '../../../sections/FacilityDetailView.astro';
+import { listFacilities, getFacility, renderMarkdoc } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const facilities = await listFacilities('de');
+  return facilities.map((facility) => ({ params: { slug: facility.slug } }));
+}
+
+const locale = 'de' as const;
+const { slug } = Astro.params;
+const facility = await getFacility(locale, slug!);
+if (!facility) throw new Error(`Facility not found: ${slug}`);
+
+const body = await renderMarkdoc(facility.content);
+---
+
+<FacilityDetailView locale={locale} facility={facility} body={body} />

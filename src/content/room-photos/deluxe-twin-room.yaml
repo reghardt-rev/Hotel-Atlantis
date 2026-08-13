@@ -1,10 +1,6 @@
 name: Deluxe Twin Room with Balcony
 heroImage: /images/rooms/deluxe-twin-room/heroImage.jpg
 images:
-  - image: /images/rooms/deluxe-twin-room/images/0/image.jpg
-    alt: 'The private balcony with two chairs, looking over the treetops'
-  - image: /images/rooms/deluxe-twin-room/images/1/image.jpg
-    alt: 'A single bed against patterned wallpaper'
   - image: /images/rooms/deluxe-twin-room/images/2/image.jpg
     alt: 'The private bathroom with a corner shower'
   - image: /images/rooms/deluxe-twin-room/images/3/image.jpg

@@ -15,6 +15,7 @@ import {
   getPage,
   listRooms,
   listActivities,
+  listFacilities,
   listOffers,
   getDirectBooking,
 } from '../lib/content';
@@ -26,9 +27,11 @@ const LOCALE = 'en' as const;
 export const GET: APIRoute = async ({ site }) => {
   const abs = (path: string) => (site ? new URL(path, site).href : path);
 
-  const [settings, rooms, activities, offers, direct, about, sustainability] = await Promise.all([
+  const [settings, rooms, facilities, activities, offers, direct, about, sustainability] =
+    await Promise.all([
     getSettings(),
     listRooms(LOCALE),
+    listFacilities(LOCALE),
     listActivities(LOCALE),
     listOffers(LOCALE),
     getDirectBooking(LOCALE),
@@ -87,6 +90,20 @@ export const GET: APIRoute = async ({ site }) => {
     );
   if (shared?.length) out.push('', `In every room: ${shared.join(', ')}.`);
 
+  if (facilities.length) {
+    heading('Facilities');
+    out.push(`All facilities: ${abs('/facilities')}`, '');
+    for (const f of facilities) {
+      const e: any = f.entry;
+      // The key facts are the whole point of asking, so they lead; the summary
+      // is prose and follows.
+      const facts = (e.highlights ?? []).map((h: string) => h.trim()).filter(Boolean).join(', ');
+      out.push(
+        `- [${e.title}](${abs(`/facilities/${f.slug}`)}): ${facts}${facts && e.summary ? '. ' : ''}${e.summary ?? ''}`,
+      );
+    }
+  }
+
   if (offers.length) {
     heading('Offers');
     out.push(`All offers: ${abs('/offers')}`, '');
@@ -108,6 +125,9 @@ export const GET: APIRoute = async ({ site }) => {
   if (sustainability?.seoDescription)
     out.push(`- [Sustainability](${abs('/sustainability')}): ${sustainability.seoDescription}`);
   out.push(`- [Photo gallery](${abs('/gallery')}): every photograph on the site, in one place.`);
+  out.push(`- [Amsterdam](${abs('/amsterdam')}): the neighbourhood, the museums and getting around.`);
+  out.push(`- [Contact and directions](${abs('/contact')})`);
+  out.push(`- [Terms and conditions](${abs('/terms')})`);
   out.push(`- [Socials](${abs('/socials')})`);
   out.push(`- [Privacy and cookies](${abs('/privacy')})`);
 

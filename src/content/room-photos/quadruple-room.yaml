@@ -1,8 +1,6 @@
 name: Quadruple Room with Balcony
 heroImage: /images/rooms/quadruple-room/heroImage.jpg
 images:
-  - image: /images/rooms/quadruple-room/images/0/image.jpg
-    alt: 'Two beds in a long room opening onto a balcony'
   - image: /images/rooms/quadruple-room/images/1/image.jpg
     alt: 'The beds, coffee station and television'
   - image: /images/rooms/quadruple-room/images/2/image.jpg

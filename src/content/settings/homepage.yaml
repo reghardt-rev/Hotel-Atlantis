@@ -7,3 +7,8 @@ carousel:
     alt: The breakfast room looking out onto the street
   - image: /images/carousel/carousel/3/image.jpg
     alt: A deluxe double room with its balcony doors open
+carouselB:
+  - image: /images/carousel-b/carouselB/0/image.jpg
+  - image: /images/carousel-b/carouselB/1/image.webp
+  - image: /images/carousel-b/carouselB/2/image.jpg
+  - image: /images/carousel-b/carouselB/3/image.avif

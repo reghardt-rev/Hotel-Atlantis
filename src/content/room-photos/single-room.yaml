@@ -1,0 +1,7 @@
+name: Single Room
+heroImage: /images/rooms/single-room/heroImage.jpg
+images:
+  - image: /images/rooms/single-room/images/0/image.jpg
+    alt: 'The single bed beneath the window onto Ceintuurbaan'
+  - image: /images/rooms/single-room/images/1/image.jpg
+    alt: 'The private bathroom with a corner shower'

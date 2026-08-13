@@ -28,9 +28,10 @@ html {
   html { scroll-behavior: auto; }
 }
 
-/* Anchored sections clear the sticky header when scrolled to. */
+/* Anchored sections clear the sticky header when scrolled to. The header is
+   88px once scrolled, the utility bar having collapsed by then. */
 section[id] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 6rem;
 }
 
 /* ---- Hero photography -------------------------------------------------------
@@ -40,6 +41,21 @@ section[id] {
    contrast and saturation stops the images reading as hazy behind it.       */
 .hero-photo {
   filter: contrast(1.08) saturate(1.06);
+}
+
+/* The hero's top-right overlays (the review score, the direct-booking box) are
+   scaled down by the script in Carousel.astro when a short screen would
+   otherwise run them into the booking bar. Anchored top-right so they shrink
+   towards the corner they are aligned to instead of drifting off it, and eased
+   so a rotation or an address-bar collapse does not snap them to a new size. */
+[data-hero-overlays] {
+  transform-origin: top right;
+  transition: transform 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-hero-overlays] {
+    transition: none;
+  }
 }
 
 /* Carries the hero type over bright slides without darkening the photo itself. */
@@ -535,6 +551,96 @@ section[id] {
 .cal-nav:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+/* ---- Wordmark ----------------------------------------------------------------
+   Four files: two lockups, each in a dark and a knockout version, swapped by the
+   header's own state rather than by a filter. See the note in Logo.astro. They
+   are laid on top of each other in a grid cell so the header does not jump as
+   they swap.
+
+   The two axes are switched by different means on purpose. Colour rides on
+   `opacity`, so the mark cross-fades as the bar turns from transparent to paper.
+   The lockup rides on `display`, so only one pair is ever in the box: two pairs
+   fading past each other mid-collapse reads as a double exposure, and there is
+   nothing to cross-fade to anyway once the third line is gone.               */
+.site-logo {
+  display: grid;
+  align-items: center;
+}
+/* Compact is the default, and the full lockup is opted into at a width and a
+   scroll state that can hold it. Stated this way round so the small screen,
+   where the room is tightest, is never briefly given the taller mark. */
+.site-logo__lockup {
+  grid-area: 1 / 1;
+  display: grid;
+  align-items: center;
+}
+.site-logo__lockup--full {
+  display: none;
+}
+@media (min-width: 768px) {
+  .site-header:not([data-scrolled]) .site-logo__lockup--full {
+    display: grid;
+  }
+  .site-header:not([data-scrolled]) .site-logo__lockup--compact {
+    display: none;
+  }
+}
+/* The standalone variant takes its height from the caller's utility class. This
+   file is emitted after Tailwind's utilities, so setting a height here would win
+   the cascade and quietly override whatever the caller asked for. */
+.site-logo__img {
+  display: block;
+  width: auto;
+}
+/* The mark is given real presence at the top of the page and then gets out of
+   the way. A stacked three-line lockup needs height before its smallest line is
+   readable at all, but a 128px bar pinned to a phone would take a quarter of the
+   screen, so the full size is a desktop affair and scrolling trades it back for
+   the page. Both states settle at an 88px bar, which is what lets one
+   scroll-margin serve every width. */
+/* The bar is derived from the mark rather than set beside it: its height is the
+   mark plus one gap above and below, so the buffer is 16px in every state by
+   construction and cannot drift as the sizes are tuned. Only `--mark` changes
+   between breakpoints and scroll states. The exported PNG is trimmed tight to
+   its ink on all four edges, so centring it really does land evenly. */
+.site-header__bar {
+  --mark: 3.5rem;
+  --mark-gap: 1rem;
+  height: calc(var(--mark) + var(--mark-gap) * 2);
+  transition: height 0.3s ease;
+}
+.site-logo img {
+  grid-area: 1 / 1;
+  display: block;
+  height: var(--mark, 3.5rem);
+  width: auto;
+  transition: opacity 0.3s ease, height 0.3s ease;
+}
+@media (min-width: 768px) {
+  .site-header__bar {
+    --mark: 6rem;
+  }
+  /* Scrolled, it returns to the phone size and hands the height back to the page. */
+  .site-header[data-scrolled] .site-header__bar {
+    --mark: 3.5rem;
+  }
+}
+/* Paper header is the default; the knockout only appears over the photograph. */
+.site-logo__light {
+  opacity: 0;
+}
+.site-header.is-hero:not([data-scrolled]) .site-logo__dark {
+  opacity: 0;
+}
+.site-header.is-hero:not([data-scrolled]) .site-logo__light {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-logo img {
+    transition: none;
+  }
 }
 
 /* ---- Two-tier site header ---------------------------------------------------

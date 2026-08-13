@@ -131,7 +131,7 @@ try{var c=JSON.parse(localStorage.getItem('atlantis-consent')||'null');if(c&&c.a
       overHero={heroHeader}
       settings={settings}
     />
-    <main class:list={['flex-1', !heroHeader && 'pt-28']}>
+    <main class:list={['flex-1', !heroHeader && 'pt-30 md:pt-40']}>
       <slot />
     </main>
     <Footer locale={locale} settings={settings} />

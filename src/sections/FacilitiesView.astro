@@ -1,0 +1,94 @@
+---
+/**
+ * The facilities index, laid out as a collage rather than as an even grid.
+ *
+ * Four tiles of identical size read as a form; the point of a collage is that
+ * the eye is given an order to travel in. So the tiles alternate wide and
+ * narrow down a twelve-column grid, and the wide ones are shorter than the
+ * narrow ones so the seam between rows never lines up.
+ *
+ * The pattern repeats every two items, which keeps it working if a fifth
+ * facility is added in Keystatic without anyone touching this file.
+ *
+ * Each tile carries its own photograph. Where a facility has none, the tile
+ * falls back to a warm gradient and the type carries it, which is what makes
+ * this safe to publish before every photo exists.
+ */
+import Layout from '../layouts/Layout.astro';
+import { listFacilities } from '../lib/content';
+import { t, localePath, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const tr = t(locale);
+const facilities = await listFacilities(locale);
+
+// Wide-then-narrow, and the reverse on the next row, so the column the seam
+// falls on keeps moving. `even` here means the first of a pair, not an index.
+const shape = (i: number) => {
+  const firstOfPair = i % 2 === 0;
+  const topRow = Math.floor(i / 2) % 2 === 0;
+  const wide = topRow ? firstOfPair : !firstOfPair;
+  return {
+    span: wide ? 'lg:col-span-7' : 'lg:col-span-5',
+    height: wide ? 'h-72 sm:h-80' : 'h-72 sm:h-96',
+  };
+};
+---
+
+<Layout title={tr.facilities.title} description={tr.facilities.intro} locale={locale}>
+  <section class="mx-auto max-w-6xl px-4 py-16">
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.facilities.title}</p>
+    <h1 class="mt-3 font-serif text-5xl">{tr.facilities.heading}</h1>
+    <p class="mt-4 max-w-2xl text-lg text-muted">{tr.facilities.intro}</p>
+
+    {facilities.length > 0 ? (
+      <div class="mt-12 grid gap-4 sm:gap-5 lg:grid-cols-12">
+        {facilities.map((facility, i) => {
+          const e = facility.entry;
+          const { span, height } = shape(i);
+          const href = localePath(locale, `/facilities/${facility.slug}`);
+          return (
+            <a
+              href={href}
+              class:list={[
+                'group relative isolate flex flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br from-clay/80 to-ink p-6 sm:p-8',
+                span,
+                height,
+              ]}
+            >
+              {e.image && (
+                <img
+                  src={e.image}
+                  alt={e.imageAlt || ''}
+                  class="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              {/* Sits over the photo and under the type. Without it the white
+                  text lands on whatever the photograph happens to be doing. */}
+              <div class="absolute inset-0 -z-10 bg-gradient-to-t from-ink/85 via-ink/40 to-ink/5"></div>
+
+              <h2 class="font-serif text-3xl text-white sm:text-4xl">{e.title}</h2>
+              {e.summary && (
+                <p class="mt-2 max-w-md text-sm leading-relaxed text-white/85">{e.summary}</p>
+              )}
+              {e.highlights?.length > 0 && (
+                <ul class="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/75">
+                  {e.highlights.map((h: string) => (
+                    <li class="rounded-full border border-white/25 px-3 py-1">{h}</li>
+                  ))}
+                </ul>
+              )}
+            </a>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="mt-8 text-muted">{tr.facilities.empty}</p>
+    )}
+  </section>
+</Layout>

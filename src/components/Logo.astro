@@ -1,0 +1,85 @@
+---
+/**
+ * The hotel wordmark, in two lockups and two colours.
+ *
+ * Lockups. The full mark is the trident above ATLANTIS above HOTEL · AMSTERDAM.
+ * That third line is 6% of the mark's height, so it survives the 96px desktop
+ * header and the 80px footer and nothing smaller: in the 56px scrolled bar it is
+ * three pixels of grey. The compact lockup drops it and keeps the trident and
+ * the name, which stay clean down to 44px. Anywhere the mark is small it is the
+ * compact one, and the choice is the header's to make as it collapses.
+ *
+ * Colours. Two files rather than one recoloured with CSS. The mark is monochrome
+ * today, so `brightness(0) invert(1)` would in fact whiten it correctly, but that
+ * only holds while it stays monochrome: give the trident an accent colour later
+ * and a filter strong enough to whiten the type would flatten the accent with
+ * it, and it would do so silently. A second export cannot fail that way.
+ *
+ * `variant="auto"` ships every combination and lets the header's own state
+ * decide, so the mark flips as the bar goes from transparent-over-hero to solid
+ * paper and from full height to collapsed. The other two variants are for
+ * somewhere the background and the size are both already known.
+ */
+interface Props {
+  siteName: string;
+  /** `dark` for paper, `light` for photography or ink, `auto` to follow the header. */
+  variant?: 'dark' | 'light' | 'auto';
+  /** Ignored by `auto`, which carries both and switches on the header's state. */
+  lockup?: 'full' | 'compact';
+  /** Height utility for the standalone variants; `auto` is sized by the header. */
+  class?: string;
+}
+const { siteName, variant = 'dark', lockup = 'full', class: className } = Astro.props;
+
+// Intrinsic sizes of the exported files, given so the row cannot reflow as the
+// images arrive. Height is set in CSS; width follows from the aspect ratio.
+const SIZE = {
+  full: { w: 354, h: 240 },
+  compact: { w: 299, h: 186 },
+} as const;
+
+const src = (l: 'full' | 'compact', tone: 'dark' | 'light') =>
+  `/images/brand/logo${l === 'compact' ? '-compact' : ''}${tone === 'light' ? '-light' : ''}.png`;
+
+// `auto` is sized by `--mark` on the header bar, so it takes no height of its
+// own: a default utility here would set the wrapper to one height while the
+// images inside it took another, and the mark would hang out of its own box.
+const standalone = className ?? 'h-10';
+---
+
+{variant === 'auto' ? (
+  <span class:list={['site-logo', className]}>
+    {(['full', 'compact'] as const).map((l) => (
+      <span class:list={['site-logo__lockup', `site-logo__lockup--${l}`]}>
+        {/* Only one of the four is ever opaque, but the name must be readable
+            exactly once however they are stacked, so the knockouts are hidden
+            from assistive tech and the dark marks carry the text. The compact
+            one is hidden too: it is the same name a second time. */}
+        <img
+          src={src(l, 'dark')}
+          alt={l === 'full' ? siteName : ''}
+          aria-hidden={l === 'full' ? undefined : 'true'}
+          width={SIZE[l].w}
+          height={SIZE[l].h}
+          class="site-logo__dark"
+        />
+        <img
+          src={src(l, 'light')}
+          alt=""
+          aria-hidden="true"
+          width={SIZE[l].w}
+          height={SIZE[l].h}
+          class="site-logo__light"
+        />
+      </span>
+    ))}
+  </span>
+) : (
+  <img
+    src={src(lockup, variant)}
+    alt={siteName}
+    width={SIZE[lockup].w}
+    height={SIZE[lockup].h}
+    class:list={['site-logo__img', standalone]}
+  />
+)}

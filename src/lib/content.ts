@@ -78,6 +78,22 @@ export function getActivity(locale: Locale, slug: string) {
   return collections[`activities_${locale}`].read(slug);
 }
 
+/**
+ * Facilities, in the order the hotel wants them read rather than by date.
+ *
+ * Their slugs are the same in every language, so unlike rooms and activities
+ * they need no translationKey lookup to switch language; see the note on
+ * `facilitiesCollection` in keystatic.config.
+ */
+export async function listFacilities(locale: Locale) {
+  const items = await collections[`facilities_${locale}`].all();
+  return items.filter((i: any) => !i.entry.draft).sort(byOrder);
+}
+
+export function getFacility(locale: Locale, slug: string) {
+  return collections[`facilities_${locale}`].read(slug);
+}
+
 /** A page from the shared `pages` collection, e.g. the privacy policy. */
 export function getPage(locale: Locale, slug: string) {
   return collections[`pages_${locale}`].read(slug);
