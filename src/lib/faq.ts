@@ -51,9 +51,9 @@ export const faqCategories: FaqCategory[] = [
       {
         q: { en: 'Is there parking?', nl: 'Is er parkeergelegenheid?', de: 'Gibt es Parkplätze?' },
         a: {
-          en: 'We have spaces in our private car park, 350 metres from the hotel, for €27.50 per day (€15 per day from 1 November to 1 March).',
-          nl: 'We hebben plekken in onze eigen parkeergarage, op 350 meter van het hotel, voor €27,50 per dag (€15 per dag van 1 november tot 1 maart).',
-          de: 'Wir haben Stellplätze in unserem eigenen Parkhaus, 350 Meter vom Hotel entfernt, für €27,50 pro Tag (€15 pro Tag vom 1. November bis 1. März).',
+          en: 'The hotel has no parking of its own. De Pijp is a paid-parking zone and on-street spaces are scarce, so we would suggest arriving by tram or train: almost nothing you have come to see needs a car once you are here.',
+          nl: 'Het hotel heeft geen eigen parkeergelegenheid. In De Pijp is het betaald parkeren en zijn plekken langs de straat schaars, dus wij raden aan met de tram of de trein te komen: bijna niets waarvoor u komt heeft de auto nog nodig zodra u er bent.',
+          de: 'Das Hotel hat keine eigenen Parkplätze. In De Pijp ist Parken gebührenpflichtig und Stellplätze auf der Straße sind knapp, wir empfehlen daher die Anreise mit Tram oder Bahn: Fast nichts, wofür Sie kommen, braucht das Auto, sobald Sie da sind.',
         },
       },
     ],
@@ -85,9 +85,9 @@ export const faqCategories: FaqCategory[] = [
       {
         q: { en: 'Can I rent a bike?', nl: 'Kan ik een fiets huren?', de: 'Kann ich ein Fahrrad leihen?' },
         a: {
-          en: 'Reception can arrange bike hire nearby, along with guided bike tours of the city. Just ask when you arrive.',
-          nl: 'De receptie regelt fietshuur in de buurt, en ook begeleide fietstochten door de stad. Vraag ernaar bij aankomst.',
-          de: 'Die Rezeption vermittelt Fahrradverleih in der Nähe sowie geführte Radtouren durch die Stadt. Fragen Sie einfach bei der Ankunft.',
+          en: 'We do not offer bike hire ourselves. There are rental shops throughout the neighbourhood, and reception can point you to the nearest.',
+          nl: 'Wij verhuren zelf geen fietsen. In de buurt zitten verschillende verhuurbedrijven, en de receptie wijst u de dichtstbijzijnde.',
+          de: 'Wir verleihen selbst keine Fahrräder. Im Viertel gibt es mehrere Verleihstationen, und die Rezeption nennt Ihnen die nächstgelegene.',
         },
       },
       {

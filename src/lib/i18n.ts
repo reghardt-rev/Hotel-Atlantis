@@ -108,7 +108,7 @@ export const ui = {
     facilities: {
       title: 'Facilities',
       heading: 'What we offer',
-      intro: 'Breakfast, reception, bikes and the practical things, answered before you ask.',
+      intro: 'Breakfast, the all-inclusive lobby and a desk that never closes.',
       back: '← All facilities',
       all: 'All facilities',
       empty: 'Nothing published yet.',
@@ -206,7 +206,7 @@ export const ui = {
     facilities: {
       title: 'Faciliteiten',
       heading: 'Wat wij bieden',
-      intro: 'Ontbijt, receptie, fietsen en de praktische zaken, beantwoord voordat u het vraagt.',
+      intro: 'Ontbijt, de all-inclusive lobby en een receptie die nooit sluit.',
       back: '← Alle faciliteiten',
       all: 'Alle faciliteiten',
       empty: 'Nog niets gepubliceerd.',
@@ -304,7 +304,7 @@ export const ui = {
     facilities: {
       title: 'Ausstattung',
       heading: 'Was wir bieten',
-      intro: 'Frühstück, Rezeption, Fahrräder und das Praktische, beantwortet, bevor Sie fragen.',
+      intro: 'Frühstück, die All-inclusive-Lobby und eine Rezeption, die nie schließt.',
       back: '← Alle Ausstattung',
       all: 'Alle Ausstattung',
       empty: 'Noch nichts veröffentlicht.',
