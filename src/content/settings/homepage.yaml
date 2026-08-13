@@ -9,6 +9,12 @@ carousel:
     alt: A deluxe double room with its balcony doors open
 carouselB:
   - image: /images/carousel-b/carouselB/0/image.jpg
+    alt: A canal cruise boat passing the Montelbaanstoren
   - image: /images/carousel-b/carouselB/1/image.webp
+    alt: The tulip market on Museumplein, the Van Gogh Museum behind
   - image: /images/carousel-b/carouselB/2/image.jpg
+    alt: The bridges of the Keizersgracht lit at dusk
   - image: /images/carousel-b/carouselB/3/image.avif
+    alt: A canal in the ring, lined with houseboats and elm trees
+  - image: /images/carousel-b/carouselB/4/image.jpg
+    alt: The front of Hotel Atlantis on Ceintuurbaan
