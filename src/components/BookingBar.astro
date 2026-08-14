@@ -26,10 +26,14 @@ const tr = t(locale);
 const guestCounts = [1, 2, 3, 4, 5, 6];
 const guestLabel = (n: number) => `${n} ${n === 1 ? tr.booking.guestOne : tr.booking.guestMany}`;
 
-// Sits over the hero photography: translucent glass, white type.
+// Sits over the hero photography on the site's light `.glass` paper, the same
+// surface as the side menu, so the type is ink rather than white. The fields are
+// solid white rather than a tint of the bar: they are what is being filled in,
+// and on a translucent surface a tinted field would carry the photograph behind
+// it through the answer.
 const fieldClass =
-  'mt-1.5 w-full rounded-lg border border-white/30 bg-white/15 px-3 py-2.5 text-left text-sm text-white transition-colors focus:border-white/70 focus:outline-none focus:ring-1 focus:ring-white/70';
-const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-white/80';
+  'mt-1.5 w-full rounded-lg border border-stone-warm bg-white px-3 py-2.5 text-left text-sm text-ink transition-colors focus:border-clay focus:outline-none focus:ring-1 focus:ring-clay';
+const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-muted';
 ---
 
 <form
@@ -38,7 +42,7 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-w
   data-hint-start={tr.booking.arrival}
   data-hint-end={tr.booking.departure}
   class:list={[
-    'booking-bar-glow relative mx-auto max-w-5xl rounded-2xl bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur-md sm:p-5',
+    'glass booking-bar-glow relative mx-auto max-w-5xl rounded-2xl p-4 ring-1 ring-ink/5 sm:p-5',
     className,
   ]}
 >
@@ -73,16 +77,16 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-w
 
     <div>
       <label class={labelClass} for="booking-guests">{tr.booking.guests}</label>
-      <select id="booking-guests" name="guests" data-guests class={`${fieldClass} [color-scheme:dark]`}>
+      <select id="booking-guests" name="guests" data-guests class={fieldClass}>
         {guestCounts.map((n) => (
-          <option value={n} selected={n === 2} class="bg-ink text-white">{guestLabel(n)}</option>
+          <option value={n} selected={n === 2} class="bg-white text-ink">{guestLabel(n)}</option>
         ))}
       </select>
     </div>
 
     <button
       type="submit"
-      class="mt-[1.35rem] inline-flex cursor-pointer items-center justify-center self-end rounded-full bg-clay px-8 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-0"
+      class="mt-[1.35rem] inline-flex cursor-pointer items-center justify-center self-end rounded-full bg-clay px-8 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-clay-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
     >
       {tr.book}
     </button>
@@ -96,11 +100,11 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-w
     role="dialog"
     aria-label={`${tr.booking.arrival} / ${tr.booking.departure}`}
     hidden
-    class="cal-panel absolute bottom-full left-0 right-0 z-40 mb-3 rounded-2xl p-4 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl sm:p-5"
+    class="cal-panel absolute bottom-full left-0 right-0 z-40 mb-3 rounded-2xl p-4 shadow-2xl ring-1 ring-ink/10 backdrop-blur-xl sm:p-5"
   >
     <div class="flex items-center justify-between gap-4">
       <button type="button" data-cal-prev aria-label="Previous month" class="cal-nav">‹</button>
-      <p data-cal-hint class="flex-1 text-center text-[0.65rem] font-medium uppercase tracking-[0.2em] text-white/70"></p>
+      <p data-cal-hint class="flex-1 text-center text-[0.65rem] font-medium uppercase tracking-[0.2em] text-muted"></p>
       <button type="button" data-cal-next aria-label="Next month" class="cal-nav">›</button>
     </div>
     <div data-cal-grid class="mt-4 grid gap-6 sm:grid-cols-2"></div>

@@ -48,7 +48,7 @@ const toSlides = (list: any[], folder: string) =>
     .map((s: any) => {
       const img = typeof s.image === 'string' ? s.image : '';
       const src = img.startsWith('/') || img.startsWith('http') ? img : `/images/${folder}/${img}`;
-      return { image: src, alt: s.alt || siteName };
+      return { image: src, alt: s.alt || siteName, focal: s.focal || undefined };
     })
     .filter((s: any) => s.image);
 
@@ -66,6 +66,90 @@ const slidesB = testing ? slidesBAll : [];
 ---
 
 <Layout title={siteName} description={tagline} locale={locale} heroHeader={true} schema={schema}>
+  {/* Sections arrive as they are scrolled to. Inline and first, so the root is
+      flagged before anything below is parsed and nothing is ever painted in
+      place and then hidden. See the note on `.reveal` in global.css. */}
+  <script is:inline>
+    (function () {
+      var root = document.documentElement;
+      // No observer, no reveal: the flag is never set, none of the CSS matches
+      // and the page renders exactly as it would have without any of this.
+      if (!('IntersectionObserver' in window)) return;
+      root.setAttribute('data-reveal', '');
+
+      function start() {
+        var waiting = [].slice.call(document.querySelectorAll('.reveal, [data-reveal-group]'));
+
+        function reveal(el) {
+          var i = waiting.indexOf(el);
+          if (i === -1) return;
+          waiting.splice(i, 1);
+          // A group's children come in one behind another. Capped, or the last
+          // card of a long grid is still waiting well after the row it belongs
+          // to has finished arriving.
+          if (el.hasAttribute('data-reveal-group')) {
+            for (var c = 0; c < el.children.length; c++) {
+              el.children[c].style.transitionDelay = Math.min(c * 70, 420) + 'ms';
+            }
+          }
+          el.classList.add('is-in');
+        }
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              reveal(entry.target);
+              // Arriving is a one-off, not a scroll effect: scrolling back up
+              // and down again must not play the whole page a second time.
+              observer.unobserve(entry.target);
+            });
+          },
+          // The trigger line sits a quarter of the way up the window, so a
+          // section has to be properly on screen and read as arrived-at rather
+          // than appearing the instant its top edge clears the bottom of the
+          // glass. Raise the percentage to make things wait longer still.
+          { rootMargin: '0px 0px -25% 0px', threshold: 0 },
+        );
+
+        waiting.slice().forEach(function (el) {
+          observer.observe(el);
+        });
+
+        // Holding the trigger a quarter of the way up costs the bottom of the
+        // page: anything sitting inside that last quarter at full scroll can
+        // never cross the line, and would stay invisible however far the reader
+        // goes. At the end of the document, everything still waiting has by
+        // definition been reached.
+        function sweep() {
+          if (!waiting.length) {
+            window.removeEventListener('scroll', sweep);
+            return;
+          }
+          if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            waiting.slice().forEach(function (el) {
+              observer.unobserve(el);
+              reveal(el);
+            });
+          }
+        }
+        window.addEventListener('scroll', sweep, { passive: true });
+        sweep();
+      }
+
+      try {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start);
+        } else {
+          start();
+        }
+      } catch (e) {
+        // Nothing is going to reveal these, so hand the page back unhidden.
+        root.removeAttribute('data-reveal');
+      }
+    })();
+  </script>
+
   {/* Hero */}
   {slides.length > 0 ? (
     <Carousel slides={slides} slidesB={slidesB}>
@@ -125,7 +209,7 @@ const slidesB = testing ? slidesBAll : [];
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
         {/* Heading and the way through to the full list on one line, as the
             activities section does it. */}
-        <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="reveal flex flex-wrap items-end justify-between gap-4">
           <div>
             <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.offers}</p>
             <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourOffers}</h2>
@@ -134,7 +218,7 @@ const slidesB = testing ? slidesBAll : [];
             {tr.allOffers} →
           </a>
         </div>
-        <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" data-reveal-group>
           {offers.map((offer) => <OfferCard offer={offer} locale={locale} mewsConfigId={mewsConfigId} />)}
         </div>
       </div>

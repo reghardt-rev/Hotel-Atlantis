@@ -28,7 +28,7 @@ const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 
 
 <section id="activities" class="bg-sand">
   <div class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="reveal flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.activities}</p>
         <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourActivities}</h2>
@@ -43,7 +43,7 @@ const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 
     {activities.length === 0 ? (
       <p class="mt-8 text-muted">{tr.noActivities}</p>
     ) : (
-      <div class="activity-collage mt-10">
+      <div class="activity-collage mt-10" data-reveal-group>
         {activities.map((item, i) => {
           const e = item.entry;
           const href = localePath(locale, `/activities/${item.slug}`);

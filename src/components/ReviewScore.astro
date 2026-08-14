@@ -4,9 +4,10 @@
  * and the direct-booking badge in the opposite corner read as a matched pair
  * framing the photograph rather than as two unrelated boxes.
  *
- * A dark scrim rather than a white tint: white type on a white wash holds up
- * over a dark doorway and vanishes over bright brickwork or a pale sky, which is
- * most of this hotel's photography.
+ * That panel is the site's light glass, so the type here is ink, not white. The
+ * stars take the accent rather than ink: five ink stars at this size read as a
+ * row of blots, and the accent is already the hero's colour for anything asking
+ * to be looked at.
  *
  * The figures live in Site settings rather than in this file: a review score
  * moves every week, and it should be editable in Keystatic without a deploy.
@@ -49,12 +50,12 @@ const label = [
 
 {score != null && (
   <div
-    class:list={['hero-panel w-fit px-4 py-3.5 text-white', className]}
+    class:list={['hero-panel w-fit px-4 py-3.5 text-ink', className]}
     role="img"
     aria-label={label}
   >
     <div class="flex items-center gap-2">
-      <div class="flex items-center gap-0.5 text-white" aria-hidden="true">
+      <div class="flex items-center gap-0.5 text-clay" aria-hidden="true">
         {Array.from({ length: 5 }, (_, i) => {
           const pct = Math.round(Math.max(0, Math.min(1, filled - i)) * 100);
           return (
@@ -73,11 +74,11 @@ const label = [
           );
         })}
       </div>
-      <span class="text-sm font-medium leading-none text-white">{scoreText}</span>
+      <span class="text-sm font-medium leading-none text-ink">{scoreText}</span>
     </div>
 
     {(countText || source) && (
-      <p class="mt-1.5 text-[0.65rem] font-medium uppercase tracking-[0.16em] text-white/80" aria-hidden="true">
+      <p class="mt-1.5 text-[0.65rem] font-medium uppercase tracking-[0.16em] text-muted" aria-hidden="true">
         {countText && `${countText} ${tr.reviewsLabel}`}
         {countText && source ? ' · ' : ''}
         {source}

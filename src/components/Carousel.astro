@@ -7,7 +7,30 @@
 interface Slide {
   image: string;
   alt?: string;
+  /** Which edge of the photograph to hold on to when it is cropped. See `FOCAL`. */
+  focal?: string;
 }
+
+/* Which part of a photograph survives the crop.
+ *
+ * The hero is `h-dvh` and the photographs are 3:2, so on a wide screen
+ * `object-cover` scales the image to the width and trims the top and the bottom
+ * instead: about a tenth off each edge at 16:9, and more the wider the window.
+ * On a phone it is the other way round and the sides go, which is why a slide
+ * can look right there and cropped on a laptop.
+ *
+ * Centre is correct for most photographs and wrong for any whose subject sits
+ * against an edge, so it is set per slide in Keystatic rather than globally.
+ * Keystatic stores the key, never the CSS: these values end up in an inline
+ * `style`, and a fixed map keeps anything typed into the editor out of it.
+ */
+const FOCAL: Record<string, string> = {
+  top: '50% 0%',
+  lower: '50% 75%',
+  bottom: '50% 100%',
+};
+const focalStyle = (s: Slide) =>
+  s.focal && FOCAL[s.focal] ? `object-position:${FOCAL[s.focal]}` : undefined;
 interface Props {
   slides: Slide[];
   /** Variant B of the hero, when a split test is running. Empty means no test. */
@@ -55,6 +78,7 @@ const bottomLead = Astro.slots.has('bottom-lead')
           data-src={testing ? s.image : undefined}
           data-variant={testing ? variant : undefined}
           alt={s.alt ?? ''}
+          style={focalStyle(s)}
           data-slide
           {/* Or a mouse drag picks the photograph up and drags the browser's own
               ghost of it around instead of running the gesture below. */}
@@ -82,6 +106,7 @@ const bottomLead = Astro.slots.has('bottom-lead')
             <img
               src={s.image}
               alt={s.alt ?? ''}
+              style={focalStyle(s)}
               class:list={[
                 'hero-photo absolute inset-0 h-full w-full object-cover',
                 i === 0 ? 'opacity-100' : 'opacity-0',

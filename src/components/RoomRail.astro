@@ -23,12 +23,12 @@ const tr = t(locale);
 ---
 
 <section id="rooms" class="py-20 sm:py-28" data-room-carousel>
-  <div class="mx-auto max-w-6xl px-4">
+  <div class="reveal mx-auto max-w-6xl px-4">
     <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
     <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
   </div>
 
-  <div class="room-rail mt-10" data-room-rail>
+  <div class="reveal room-rail mt-10" data-room-rail>
     {rooms.map((room) => <RoomCard room={room} locale={locale} aspect="wide" />)}
   </div>
 

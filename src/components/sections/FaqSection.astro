@@ -12,8 +12,8 @@ const items = allFaqItems().slice(0, limit);
 
 <section id="faq" class="bg-sand">
   <div class="mx-auto max-w-3xl px-4 py-20 sm:py-28">
-    <h2 class="text-center font-serif text-4xl sm:text-5xl">{faqShortTitle[locale]}</h2>
-    <div class="mt-10 divide-y divide-stone-warm border-y border-stone-warm">
+    <h2 class="reveal text-center font-serif text-4xl sm:text-5xl">{faqShortTitle[locale]}</h2>
+    <div class="mt-10 divide-y divide-stone-warm border-y border-stone-warm" data-reveal-group>
       {items.map((item) => (
         <details class="group">
           <summary class="flex cursor-pointer items-center justify-between gap-4 py-5 text-lg font-medium marker:content-['']">

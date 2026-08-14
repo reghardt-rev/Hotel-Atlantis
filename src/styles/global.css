@@ -192,46 +192,47 @@ section[id] {
    The overlays that sit on the hero photograph: the review score and the
    direct-booking badge.
 
-   A dark scrim carrying a white sheen, rather than a plain white tint. White
-   type on a 10% white wash holds up over a dark doorway and vanishes over bright
-   brickwork or a pale sky, which is most of this hotel's photography. The
-   calendar panel already reaches for the same fix, being a near-solid dark once
-   its content gets dense.
+   They wear `.glass`, the light translucent paper the side menu and the header
+   are built from, so everything laid over the photograph is one surface: these
+   two, the booking bar below them, and the calendar that opens out of it.
 
-   The sheen and the inset highlight are what keep it reading as glass rather
-   than as a plain grey box.                                                  */
+   This was a dark scrim carrying a white sheen, on the argument that white type
+   survives a bright sky where a white wash does not. The light surface gives that
+   up, so the burden moves to the paper itself: it has to stay opaque enough that
+   ink holds over the brightest slide in the carousel. If a photograph ever defeats
+   it, raise `--glass-bg` towards `--color-paper` rather than putting the type
+   back to white, or the panels part company with the rest of the site again.   */
 .hero-panel {
   position: relative;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02)),
-    rgba(13, 27, 46, 0.55);
+  border: 1px solid rgba(13, 27, 46, 0.06);
+  background: var(--glass-bg);
   /* Unprefixed only, as Tailwind's own backdrop utilities emit: writing both
      makes the minifier keep the -webkit- one and drop this, which costs Firefox
      the blur entirely. */
-  backdrop-filter: blur(14px) saturate(125%);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  /* Carries the hero's own type treatment into the panel, so the text survives
-     even where the photograph is brightest behind the blur. */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  backdrop-filter: var(--glass-blur);
+  /* Deeper than a light panel would normally need. The drop shadow is doing the
+     work the dark scrim used to do: separating the box from the photograph. */
+  box-shadow: 0 18px 40px rgba(13, 27, 46, 0.3);
 }
 
 /* The direct-booking badge is the one being argued for, so it gets a halo in the
    accent blue rather than sitting as quiet as the score above it. */
 .hero-panel--glow {
   box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.38),
-    var(--glow-accent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    0 18px 40px rgba(13, 27, 46, 0.3),
+    var(--glow-accent);
 }
 
-/* The booking bar takes the same halo. It is not a `.hero-panel` (it carries its
-   own white tint and ring), so it gets the glow with its own drop shadow rather
-   than the panel's, and this replaces the `shadow-xl` it used to wear: both set
-   `box-shadow`, and this file is emitted after Tailwind's utilities. */
+/* The booking bar takes the same halo but not the dark surface: it wears `.glass`,
+   the light translucent paper the side menu and the header are built from, so the
+   one thing on the hero asking to be used reads as part of the site laid over the
+   photograph rather than as another dark pane of it. Type inside it is ink, and
+   the calendar that opens out of it follows the same surface.
+
+   It is therefore not a `.hero-panel`, and takes the glow with its own drop
+   shadow rather than the panel's. This replaces the `shadow-xl` it used to wear:
+   both set `box-shadow`, and this file is emitted after Tailwind's utilities. */
 .booking-bar-glow {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.25),
@@ -269,6 +270,52 @@ section[id] {
 @media (prefers-reduced-motion: reduce) {
   .hero-panel--jiggle {
     animation: none;
+  }
+}
+
+/* ---- Scroll reveal -----------------------------------------------------------
+   The homepage arrives a section at a time as it is scrolled to: headings rise a
+   little, the photography under them fades up behind it.
+
+   Everything here hangs off `data-reveal` on the root element, which the inline
+   script at the top of HomeView sets before any of the page below it is parsed.
+   That ordering is the whole trick. Hiding by default and revealing with script
+   would show the page and then blank it; hiding only once the script has claimed
+   the page means a browser with no scripting, or one where that script never
+   arrives, matches none of these rules and simply renders the page as written.
+   Nothing is ever left invisible waiting for an observer that is not coming.
+
+   Two shapes. `.reveal` is one thing arriving on its own, a heading or a rail.
+   `[data-reveal-group]` is a row of things arriving one after another, and its
+   children are hidden from the start here rather than being marked up by script,
+   which is what keeps the cards from flashing before they are caught.          */
+:root[data-reveal] .reveal,
+:root[data-reveal] [data-reveal-group] > * {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  /* Out-quint: most of the distance is covered early, so it reads as arriving
+     and settling rather than drifting in at a constant speed. */
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-reveal] .reveal.is-in,
+:root[data-reveal] [data-reveal-group].is-in > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* The movement is the part that causes trouble, so that is the part that goes.
+   Stated for both states, so anything already caught by the observer is left
+   where it is rather than being animated back. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-reveal] .reveal,
+  :root[data-reveal] [data-reveal-group] > *,
+  :root[data-reveal] .reveal.is-in,
+  :root[data-reveal] [data-reveal-group].is-in > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -543,10 +590,10 @@ section[id] {
    styled, so the dates use this instead and it inherits the bar's glass look.
    Day styling lives here rather than in the script so the classes are never at
    the mercy of the utility scanner.                                          */
-/* Denser than the bar itself: a grid of small dates needs the photo held back
-   further than a row of large labels does. */
+/* The bar's own paper, near-opaque. Denser than the bar itself: a grid of small
+   dates needs the photo held back further than a row of large labels does. */
 .cal-panel {
-  background: rgba(13, 27, 46, 0.96);
+  background: rgba(245, 249, 255, 0.97);
 }
 
 .cal-month-title {
@@ -554,7 +601,7 @@ section[id] {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-ink);
   text-align: center;
 }
 
@@ -572,7 +619,7 @@ section[id] {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-muted);
 }
 
 .cal-day {
@@ -583,24 +630,27 @@ section[id] {
   width: 100%;
   border-radius: 0.4rem;
   font-size: 0.875rem;
-  color: #fff;
+  color: var(--color-ink);
   background: transparent;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .cal-day:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-stone-warm);
 }
 .cal-day:disabled {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(13, 27, 46, 0.28);
   cursor: default;
 }
 .cal-day--range {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--color-sand);
 }
+/* White type stated here rather than left to `.cal-day`, which is now ink: these
+   two are the only cells that carry the accent behind them. */
 .cal-day--start,
 .cal-day--end {
   background: var(--color-clay);
+  color: #fff;
   font-weight: 500;
 }
 .cal-day--start:hover,
@@ -608,7 +658,7 @@ section[id] {
   background: var(--color-clay-dark);
 }
 .cal-day--today:not(.cal-day--start):not(.cal-day--end) {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(13, 27, 46, 0.35);
 }
 
 .cal-nav {
@@ -620,13 +670,13 @@ section[id] {
   border-radius: 9999px;
   font-size: 1.25rem;
   line-height: 1;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-ink);
+  background: var(--color-sand);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 .cal-nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-stone-warm);
 }
 .cal-nav:disabled {
   opacity: 0.3;
