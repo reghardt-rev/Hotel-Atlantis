@@ -140,7 +140,7 @@ export type GalleryPhoto = {
   src: string;
   alt: string;
   /** Which part of the site it belongs to; the label is translated in the view. */
-  group: 'hotel' | 'rooms' | 'activities' | 'offers' | 'news';
+  group: 'hotel' | 'rooms' | 'activities' | 'offers';
   /** Attribution, where the photo is not the hotel's own. */
   credit?: string;
 };
@@ -176,8 +176,9 @@ export async function listAllPhotos(locale: Locale): Promise<GalleryPhoto[]> {
     add(src, slide.alt || siteName, 'hotel');
   }
 
-  // Standalone albums curated in Keystatic.
-  for (const album of await collections[`gallery_${locale}`].all()) {
+  // Standalone albums curated in Keystatic. Shared across languages, like the
+  // room photography: one upload, one caption, every language.
+  for (const album of await collections.gallery.all()) {
     for (const item of album.entry.images ?? []) {
       add(item.image, item.alt || album.entry.title || siteName, 'hotel');
     }
@@ -201,20 +202,117 @@ export async function listAllPhotos(locale: Locale): Promise<GalleryPhoto[]> {
     add(item.entry.image, item.entry.title, 'offers');
   }
 
-  for (const item of await collections[`news_${locale}`].all()) {
-    if (item.entry.draft) continue;
-    add(item.entry.coverImage, item.entry.title, 'news');
+  const collected = await dedupeByContent(photos);
+  const order = await readGalleryOrder();
+  // English only. The list is shared, so topping it up from every language would
+  // label its rows in whichever language happened to be built first. A photograph
+  // that somehow exists only in another language is not added, and simply stays
+  // at the bottom of the gallery.
+  //
+  // Does not affect this build either way: anything appended here is unranked,
+  // and unranked photos already sort to the bottom in collection order.
+  if (locale === 'en') await topUpGalleryOrder(collected, order);
+  return applyGalleryOrder(collected, order);
+}
+
+/* ---- Gallery order -----------------------------------------------------------
+ * The gallery page collects photographs from all over the site, so there is
+ * nowhere on a photograph itself to hang a position: a room's hero belongs to the
+ * room, not to the gallery, and moving it in the gallery must not reorder the
+ * room. The sequence therefore lives in its own list, keyed by image path.
+ *
+ * One list for all three languages. It is the same photographs in the same
+ * sequence whatever the captions say, and asking someone to drag the same set
+ * into the same order three times is how the three fall out of step.
+ *
+ * Anything missing from the list sorts to the bottom. That is the whole of the
+ * "new photographs go to the end" behaviour: a photo added anywhere on the site
+ * appears in the gallery immediately, at the end, with nobody editing a list.
+ */
+type GalleryOrderEntry = { src: string; label: string };
+
+const GALLERY_ORDER_FILE = 'src/content/settings/gallery-order.yaml';
+
+async function readGalleryOrder(): Promise<GalleryOrderEntry[]> {
+  const doc = await (reader.singletons as any).galleryOrder?.read();
+  return ((doc?.photos ?? []) as any[])
+    .filter((p) => typeof p?.src === 'string' && p.src)
+    .map((p) => ({ src: p.src as string, label: String(p.label ?? '') }));
+}
+
+function applyGalleryOrder(photos: GalleryPhoto[], order: GalleryOrderEntry[]): GalleryPhoto[] {
+  if (!order.length) return photos;
+
+  const rank = new Map<string, number>();
+  order.forEach((entry, i) => {
+    if (!rank.has(entry.src)) rank.set(entry.src, i);
+  });
+
+  // `MAX_SAFE_INTEGER` and not `Infinity`: two unlisted photos would subtract to
+  // NaN, and a comparator that returns NaN leaves the order undefined.
+  const at = (p: GalleryPhoto) => rank.get(p.src) ?? Number.MAX_SAFE_INTEGER;
+
+  // The index tiebreak keeps unlisted photos in the order they were collected
+  // rather than trusting the engine's sort to be stable.
+  return photos
+    .map((photo, i) => ({ photo, i }))
+    .sort((a, b) => at(a.photo) - at(b.photo) || a.i - b.i)
+    .map((x) => x.photo);
+}
+
+/**
+ * Add photographs the list has never seen to the end of it, so they can be
+ * dragged in Keystatic rather than only ever sitting at the bottom.
+ *
+ * Append-only: it never reorders and never removes, so it cannot undo a hand-set
+ * sequence, and an entry left behind by a deleted photo is inert (it matches
+ * nothing). Skipped on CI, where the checkout is disposable and a build has no
+ * business writing to tracked content.
+ *
+ * Runs once per language per build. Writing the merged list rather than the new
+ * tail makes that idempotent even if a later call read the file before an earlier
+ * one had written it.
+ */
+async function topUpGalleryOrder(photos: GalleryPhoto[], order: GalleryOrderEntry[]) {
+  if (process.env.CI || process.env.CF_PAGES) return;
+
+  const known = new Set(order.map((e) => e.src));
+  const fresh = photos.filter((p) => !known.has(p.src));
+  if (!fresh.length) return;
+
+  const merged: GalleryOrderEntry[] = [];
+  const seen = new Set<string>();
+  for (const entry of [...order, ...fresh.map((p) => ({ src: p.src, label: p.alt }))]) {
+    if (seen.has(entry.src)) continue;
+    seen.add(entry.src);
+    merged.push(entry);
   }
 
-  return dedupeByContent(photos);
+  // JSON.stringify emits a valid YAML double-quoted scalar, which saves taking a
+  // YAML dependency for two fields. Keystatic reads this back as its own.
+  const body = merged
+    .map((e) => `  - src: ${JSON.stringify(e.src)}\n    label: ${JSON.stringify(e.label)}\n`)
+    .join('');
+
+  try {
+    const fs = await import('node:fs/promises');
+    await fs.writeFile(
+      `${process.cwd()}/${GALLERY_ORDER_FILE}`,
+      merged.length ? `photos:\n${body}` : 'photos: []\n',
+      'utf8',
+    );
+  } catch {
+    // Read-only filesystem, or no filesystem at all. The gallery still renders;
+    // the new photographs simply stay at the bottom until this can run.
+  }
 }
 
 /**
  * Collapse photos that are the same picture committed under different paths.
  *
  * Deduplicating on `src` misses these entirely: one JPEG is committed as a room
- * hero, again as a news cover and again inside a Keystatic album, so the gallery
- * shows the same picture three times over. Compare the bytes instead.
+ * hero, again as an activity cover and again inside a Keystatic album, so the
+ * gallery shows the same picture three times over. Compare the bytes instead.
  *
  * Runs during prerender, where the files are on disk. Anything that cannot be
  * read (a remote URL, or a file generated later) keeps its path as the key, so

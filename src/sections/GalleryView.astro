@@ -22,7 +22,7 @@ const tr = t(locale);
 const photos = await listAllPhotos(locale);
 
 // Only offer a filter for groups that actually have photographs in them.
-const groups = (['hotel', 'rooms', 'activities', 'offers', 'news'] as const).filter((g) =>
+const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) =>
   photos.some((p) => p.group === g),
 );
 ---

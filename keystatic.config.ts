@@ -29,6 +29,29 @@ const image = (label: string, subfolder: string) =>
   });
 
 /**
+ * Per-slide framing for the hero carousel. The hero fills the screen whatever
+ * shape the screen is, so every photograph is cropped to fit and the crop is
+ * what gets edited here, not the photograph.
+ *
+ * The keys are deliberately vague about pixels: the component turns them into
+ * `object-position`, and a slide set from here should not need revisiting when
+ * that changes. See the note on `FOCAL` in Carousel.astro.
+ */
+const focalField = () =>
+  fields.select({
+    label: 'Keep in frame',
+    description:
+      'The hero fills the whole screen, so a wide window trims the top and bottom of the photo and a phone trims the sides instead. Leave on the middle unless the crop is cutting off the thing the photo is about, then pick the edge that thing sits against.',
+    options: [
+      { label: 'Middle of the photo', value: 'center' },
+      { label: 'Top — keep the sky, the roofline, the tops of the trees', value: 'top' },
+      { label: 'Lower middle — favour the bottom without giving up the top', value: 'lower' },
+      { label: 'Bottom — keep the floor, the furniture, the foreground', value: 'bottom' },
+    ],
+    defaultValue: 'center',
+  });
+
+/**
  * Room photography is shared, not localised: a photo is uploaded once here and
  * every language of that room shows it. Each localised room entry points at one
  * of these sets through its `photos` field.
@@ -226,25 +249,6 @@ function activitiesCollection(locale: Locale) {
   });
 }
 
-function newsCollection(locale: Locale) {
-  return collection({
-    label: `News · ${LOCALE_LABEL[locale]}`,
-    path: `src/content/news/${locale}/*`,
-    slugField: 'title',
-    format: { contentField: 'content' },
-    columns: ['title', 'publishedAt'],
-    entryLayout: 'content',
-    schema: {
-      title: fields.slug({ name: { label: 'Headline' } }),
-      publishedAt: fields.date({ label: 'Published' }),
-      coverImage: image('Cover image', 'news'),
-      excerpt: fields.text({ label: 'Excerpt', multiline: true }),
-      draft: fields.checkbox({ label: 'Draft (hide from the site)', defaultValue: false }),
-      content: fields.markdoc({ label: 'Article' }),
-    },
-  });
-}
-
 function pagesCollection(locale: Locale) {
   return collection({
     label: `Pages · ${LOCALE_LABEL[locale]}`,
@@ -273,24 +277,44 @@ function pagesCollection(locale: Locale) {
   });
 }
 
-function galleryCollection(locale: Locale) {
-  return collection({
-    label: `Gallery · ${LOCALE_LABEL[locale]}`,
-    path: `src/content/gallery/${locale}/*`,
-    slugField: 'title',
-    columns: ['title'],
-    schema: {
-      title: fields.slug({ name: { label: 'Album title' } }),
-      images: fields.array(
-        fields.object({
-          image: image('Image', 'gallery'),
-          alt: fields.text({ label: 'Alt text' }),
-        }),
-        { label: 'Images', itemLabel: (props) => props.fields.alt.value || 'Image' },
-      ),
-    },
-  });
-}
+/**
+ * Gallery albums: photographs for the gallery page that are not already
+ * somewhere else on the site. Everything attached to a room, an activity, an
+ * offer or the carousel is collected automatically, so this is only for pictures
+ * that belong nowhere in particular.
+ *
+ * Shared, not localised, for the same reason as `roomPhotosCollection`: a
+ * photograph is the same photograph in every language, and three copies of one
+ * album is three chances to upload the same JPEG three times. The order the
+ * pictures appear in is shared too, in the `galleryOrder` singleton.
+ *
+ * The cost is the caption, which is the one part of a photograph that is
+ * language-specific: a Dutch visitor reads the alt text written here. Room
+ * photography already makes that trade, and falls back to the localised title of
+ * the thing it belongs to when the alt is blank, which this does as well.
+ */
+const galleryCollection = collection({
+  label: 'Gallery albums (shared)',
+  path: 'src/content/gallery/*',
+  slugField: 'title',
+  columns: ['title'],
+  schema: {
+    title: fields.slug({
+      name: {
+        label: 'Album title',
+        description:
+          'Not shown on the site. Used as the caption for any photo in the album left without alt text.',
+      },
+    }),
+    images: fields.array(
+      fields.object({
+        image: image('Image', 'gallery'),
+        alt: fields.text({ label: 'Alt text (describe the photo)' }),
+      }),
+      { label: 'Images', itemLabel: (props) => props.fields.alt.value || 'Image' },
+    ),
+  },
+});
 
 /**
  * What the guest gets by booking on this site instead of through an OTA.
@@ -339,14 +363,47 @@ export default config({
     brand: { name: 'Hotel Atlantis' },
     navigation: {
       Settings: ['settings', 'homepage'],
-      Shared: ['roomPhotos'],
-      English: ['rooms_en', 'offers_en', 'facilities_en', 'activities_en', 'news_en', 'pages_en', 'gallery_en', 'directBooking_en'],
-      Nederlands: ['rooms_nl', 'offers_nl', 'facilities_nl', 'activities_nl', 'news_nl', 'pages_nl', 'gallery_nl', 'directBooking_nl'],
-      Deutsch: ['rooms_de', 'offers_de', 'facilities_de', 'activities_de', 'news_de', 'pages_de', 'gallery_de', 'directBooking_de'],
+      Shared: ['roomPhotos', 'gallery', 'galleryOrder'],
+      English: ['rooms_en', 'offers_en', 'facilities_en', 'activities_en', 'pages_en', 'directBooking_en'],
+      Nederlands: ['rooms_nl', 'offers_nl', 'facilities_nl', 'activities_nl', 'pages_nl', 'directBooking_nl'],
+      Deutsch: ['rooms_de', 'offers_de', 'facilities_de', 'activities_de', 'pages_de', 'directBooking_de'],
     },
   },
 
   singletons: {
+    /**
+     * The order of the gallery page, top to bottom.
+     *
+     * The page gathers photographs from the whole site, so this list is filled in
+     * for you: every photograph on the site turns up here on its own, at the end,
+     * and the job here is only to drag them into the order you want. Deleting a
+     * row does not remove the photograph from the gallery, it only gives up
+     * saying where it goes, which puts it back at the bottom.
+     *
+     * Shared by all three languages, since it is the same photographs in the
+     * same sequence whatever language the captions are in.
+     */
+    galleryOrder: singleton({
+      label: 'Gallery order',
+      path: 'src/content/settings/gallery-order',
+      schema: {
+        photos: fields.array(
+          fields.object({
+            src: fields.text({
+              label: 'Image',
+              description: 'Filled in automatically. Changing it by hand will unpin the photo.',
+            }),
+            label: fields.text({ label: 'What it shows' }),
+          }),
+          {
+            label: 'Photos, first to last',
+            description:
+              'Drag to set the order photographs appear in on the gallery page. Every photo on the site is added here automatically the first time it is seen, at the bottom, so a new photograph goes to the end until you move it.',
+            itemLabel: (props) => props.fields.label.value || props.fields.src.value || 'Photo',
+          },
+        ),
+      },
+    }),
     directBooking_en: directBookingSingleton('en'),
     directBooking_nl: directBookingSingleton('nl'),
     directBooking_de: directBookingSingleton('de'),
@@ -428,6 +485,7 @@ export default config({
               validation: { isRequired: true },
             }),
             alt: fields.text({ label: 'Alt text (describe the photo)' }),
+            focal: focalField(),
           }),
           {
             label: 'Front-page carousel',
@@ -444,6 +502,7 @@ export default config({
               validation: { isRequired: true },
             }),
             alt: fields.text({ label: 'Alt text (describe the photo)' }),
+            focal: focalField(),
           }),
           {
             label: 'Front-page carousel \u2014 variant B (A/B test)',
@@ -481,14 +540,9 @@ export default config({
     facilities_en: facilitiesCollection('en'),
     facilities_nl: facilitiesCollection('nl'),
     facilities_de: facilitiesCollection('de'),
-    news_en: newsCollection('en'),
-    news_nl: newsCollection('nl'),
-    news_de: newsCollection('de'),
     pages_en: pagesCollection('en'),
     pages_nl: pagesCollection('nl'),
     pages_de: pagesCollection('de'),
-    gallery_en: galleryCollection('en'),
-    gallery_nl: galleryCollection('nl'),
-    gallery_de: galleryCollection('de'),
+    gallery: galleryCollection,
   },
 });
