@@ -171,6 +171,101 @@ const tr = t(locale);
       { passive: true },
     );
 
+    /* ---- Drag --------------------------------------------------------------
+     * Pulling the rail sideways with the mouse, which otherwise has no way to
+     * move it but the two arrows: the rail is a scroll container, so a finger
+     * already drags it, with momentum and snapping that nothing written here
+     * would improve on. Hence mouse only, rather than the pointer-type-agnostic
+     * gesture the hero carousel runs. The hero has no native scrolling to
+     * preserve; this does, and taking it over would be a downgrade on a phone.
+     */
+    const DRAG_MIN = 6; // px of travel before a press counts as a drag
+
+    let pointer: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let dragging = false;
+    let dragged = false;
+    let unarm: ReturnType<typeof setTimeout> | undefined;
+
+    function endDrag() {
+      if (pointer === null) return;
+      pointer = null;
+      if (!dragging) return;
+      dragging = false;
+      rail!.classList.remove('is-dragging');
+      // Arm the click guard below. Disarmed on a timer as well as by the click,
+      // because a drag does not reliably end in one: release outside the rail
+      // and no click is generated at all, and a guard left armed would go on to
+      // swallow an unrelated click later.
+      dragged = true;
+      clearTimeout(unarm);
+      unarm = setTimeout(() => (dragged = false), 400);
+    }
+
+    rail.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button > 0) return;
+      pointer = e.pointerId;
+      startX = lastX = e.clientX;
+      startY = e.clientY;
+      dragged = false;
+    });
+
+    rail.addEventListener('pointermove', (e) => {
+      if (pointer !== e.pointerId) return;
+
+      if (!dragging) {
+        // Held until the movement is both far enough to be deliberate and more
+        // sideways than not, so a press that turns into a page scroll, or a
+        // plain click on a card, is left alone.
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) < DRAG_MIN || Math.abs(dx) <= Math.abs(dy)) return;
+        dragging = true;
+        rail!.classList.add('is-dragging');
+        // As on the hero: the class, and the `user-select` guard with it, only
+        // lands once the drag is recognised, by which point the browser may have
+        // started selecting from where the press began. Clear what it caught.
+        window.getSelection()?.removeAllRanges();
+        try {
+          // Keeps the gesture alive when the pointer leaves the rail mid-drag.
+          // Not worth losing the drag over if the pointer has already gone.
+          rail!.setPointerCapture(e.pointerId);
+        } catch {
+          /* no capture, but the drag still tracks while the pointer is here */
+        }
+      }
+
+      // Applied as a delta against wherever the rail is now, never as an offset
+      // from where the drag started. The loop jumps `scrollLeft` by a whole run
+      // the moment a copy is scrolled into, and an absolute figure would undo
+      // that jump on the very next move and strand the drag inside the copies.
+      rail!.scrollLeft -= e.clientX - lastX;
+      lastX = e.clientX;
+    });
+
+    rail.addEventListener('pointerup', endDrag);
+    rail.addEventListener('pointercancel', endDrag);
+
+    // A drag that happens to finish on a card must not also open that room.
+    // Captured, so it is stopped before it reaches the link inside.
+    rail.addEventListener(
+      'click',
+      (e) => {
+        if (!dragged) return;
+        dragged = false;
+        clearTimeout(unarm);
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true,
+    );
+
+    // Or the browser picks up the photograph, or the link around it, and drags
+    // its own ghost of the thing across the page instead of running the above.
+    rail.addEventListener('dragstart', (e) => e.preventDefault());
+
     setupLoop();
     sync();
   }

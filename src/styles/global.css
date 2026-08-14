@@ -188,6 +188,45 @@ section[id] {
   stroke-width: 1.1;
 }
 
+/* ---- Hero drag ---------------------------------------------------------------
+   The hero's drag scrubs the crossfade by hand: Carousel.astro writes opacity
+   straight onto the slides as the pointer moves. The slides carry a one second
+   opacity transition for the automatic change, and during a drag that transition
+   is exactly wrong. Every value the hand produces gets eased towards over a
+   second, so the photograph answers a second late and the gesture reads as
+   broken rather than as slow. `is-dragging` is set on the hero for this and has
+   been since the drag was written; this is the rule it was waiting for.
+
+   Transform is transitioned alongside opacity so the parallax settles instead of
+   snapping home, on its own shorter duration: a crossfade can afford a second, a
+   photograph sliding a few pixels back into place cannot. Declared here rather
+   than as utilities because this file is emitted after Tailwind's, which is what
+   lets it replace the `transition-opacity` the slides wear.                   */
+[data-carousel] [data-slide] {
+  transition-property: opacity, transform;
+  transition-duration: 1000ms, 450ms;
+  transition-timing-function: ease-in-out, cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-carousel].is-dragging [data-slide] {
+  transition: none;
+}
+
+/* The photograph is the thing being pulled, so it takes the hand. Set on the
+   descendants too, along with the selection guard: without it a drag across the
+   hero sweeps a text selection through the tagline, the rating and the booking
+   bar behind the photograph, and paints the whole screen blue on the way.
+
+   `user-select` unprefixed only. Writing `-webkit-user-select` beside it does
+   nothing: the build strips it, its targets being new enough for the standard
+   property. Unlike `backdrop-filter` above, where the prefix is what survives
+   and the plain one is what gets dropped, so the two are written differently on
+   purpose. Check the built file before adding a prefix to either. */
+[data-carousel].is-dragging,
+[data-carousel].is-dragging * {
+  cursor: grabbing;
+  user-select: none;
+}
+
 /* ---- Hero panels -------------------------------------------------------------
    The overlays that sit on the hero photograph: the review score and the
    direct-booking badge.
@@ -463,6 +502,25 @@ section[id] {
   flex: 0 0 auto;
   width: clamp(17rem, 78vw, 23rem);
   scroll-snap-align: start;
+}
+
+/* While the rail is being pulled along by the mouse. Snapping comes off for the
+   duration or it fights the hand, and the smooth behaviour has to go with it:
+   every move of the drag sets `scrollLeft`, and each one of those would be
+   animated rather than followed. Both come back on release, so the rail still
+   settles onto a card afterwards.
+
+   The cursor is set on the children as well as the rail. They are cards made of
+   links and photographs, each carrying its own cursor, and without this the hand
+   turns back into a pointer the moment the drag passes over one. */
+.room-rail.is-dragging {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+.room-rail.is-dragging,
+.room-rail.is-dragging * {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .rail-nav {

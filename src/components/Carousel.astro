@@ -281,7 +281,13 @@ const bottomLead = Astro.slots.has('bottom-lead')
 
     function show(n: number) {
       index = (n + slides.length) % slides.length;
-      slides.forEach((s, k) => (s.style.opacity = k === index ? '1' : '0'));
+      slides.forEach((s, k) => {
+        s.style.opacity = k === index ? '1' : '0';
+        // Clears whatever the drag left behind. Transform is transitioned in
+        // global.css, so the pair eases back into the frame rather than
+        // arriving there before the fade has finished.
+        s.style.transform = '';
+      });
       dots.forEach((d, k) => {
         d.classList.toggle('bg-white', k === index);
         d.classList.toggle('bg-white/50', k !== index);
@@ -324,15 +330,47 @@ const bottomLead = Astro.slots.has('bottom-lead')
     let dragged = false;
     let incoming = -1;
     let progress = 0;
+    let dir = 0;
     let unarm: ReturnType<typeof setTimeout> | undefined;
 
     // Roughly half the hero, floored so the gesture stays usable on a narrow
     // phone where half the width is a very short distance.
     const sweep = () => Math.max(140, root.clientWidth * 0.5);
 
+    /* A photograph that only fades gives the hand nothing to hold. Both slides
+     * travel a little with the drag as well, the outgoing one led by it and the
+     * incoming one arriving from the far side, which is what makes the gesture
+     * read as moving the picture rather than as working a fader.
+     *
+     * The pair is scaled up while it moves so the travel stays inside the frame.
+     * These are `object-cover` photographs pinned to the box, and sliding one
+     * sideways without the overscan opens a strip of empty hero at the edge,
+     * which is the thing the note at the top of this section warns about. The
+     * travel is a fraction of the width rather than a pixel count, so the same
+     * overscan covers it on a phone and on a monitor.
+     */
+    const PARALLAX = 0.025; // of the hero's width
+    const OVERSCAN = 1.06; // 3% of cover each side, comfortably over PARALLAX
+
     function scrub() {
+      // Reduced motion keeps the crossfade, which is the part that carries the
+      // meaning, and drops the part that moves.
+      const span = reduce ? 0 : root.clientWidth * PARALLAX;
+      const out = dir * span * progress;
+      const arriving = dir * span * (progress - 1);
+      const lift = reduce ? '' : ` scale(${OVERSCAN})`;
+
       slides.forEach((s, k) => {
         s.style.opacity = k === index ? String(1 - progress) : k === incoming ? String(progress) : '0';
+        if (reduce) {
+          s.style.transform = '';
+        } else if (k === index) {
+          s.style.transform = `translateX(${out.toFixed(1)}px)${lift}`;
+        } else if (k === incoming) {
+          s.style.transform = `translateX(${arriving.toFixed(1)}px)${lift}`;
+        } else {
+          s.style.transform = '';
+        }
       });
     }
 
@@ -385,6 +423,11 @@ const bottomLead = Astro.slots.has('bottom-lead')
         if (Math.abs(dx) < DRAG_MIN || Math.abs(dx) <= Math.abs(dy)) return;
         dragging = true;
         root.classList.add('is-dragging');
+        // `user-select` arrives with the class, which is eight pixels of travel
+        // too late: the browser has already begun selecting from wherever the
+        // press landed. Drop whatever it caught, or the drag ends with the hero
+        // highlighted blue behind the photograph.
+        window.getSelection()?.removeAllRanges();
         try {
           // Keeps the gesture alive when the pointer leaves the hero mid-drag.
           // Not worth losing the drag over if the pointer has already gone.
@@ -394,6 +437,9 @@ const bottomLead = Astro.slots.has('bottom-lead')
         }
       }
 
+      // Which way the pair travels: with the hand, so dragging left carries the
+      // current photograph off to the left and brings the next in behind it.
+      dir = dx < 0 ? -1 : 1;
       incoming = ((dx < 0 ? index + 1 : index - 1) + slides.length) % slides.length;
       progress = Math.min(1, Math.abs(dx) / sweep());
       scrub();
