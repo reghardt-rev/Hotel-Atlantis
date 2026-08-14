@@ -34,6 +34,34 @@ section[id] {
   scroll-margin-top: 6rem;
 }
 
+/* ---- Glass -------------------------------------------------------------------
+   The site's translucent surface, and the light counterpart to `.hero-panel`.
+   Anything laid over the page rather than part of it uses this: the sticky
+   header, the side menu, the cookie banner.
+
+   Translucency alone is not the effect. Without the blur the page reads as noise
+   under the type, so the two travel together, and where the browser cannot blur
+   the token falls back to solid paper rather than leaving unreadable type. One
+   `@supports` on the custom property covers every surface at once.
+
+   `backdrop-filter` unprefixed only, as Tailwind's own backdrop utilities emit:
+   writing both makes the minifier keep the -webkit- one and drop this, which
+   costs Firefox the blur entirely.                                          */
+:root {
+  --glass-bg: rgba(245, 249, 255, 0.72);
+  --glass-blur: blur(24px) saturate(125%);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass-bg: var(--color-paper);
+  }
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+}
+
 /* ---- Hero photography -------------------------------------------------------
    The photos carry the page, so the darkening is pushed out to the edges rather
    than laid flat across the whole frame: a vignette for depth, plus a lighter
@@ -247,10 +275,20 @@ section[id] {
   transition: visibility 0s;
 }
 
+/* Enough to push the page back and say the panel has focus, and no more. At
+   half-opacity this read as a modal takeover rather than a menu.
+
+   It stops where the panel starts. Run full-width it sits *behind* the panel,
+   and the panel's translucency then reveals a flat scrim rather than the page,
+   which is no translucency at all. `min()` because the panel is 22rem or the
+   full width, whichever is smaller; on a phone the scrim collapses to nothing,
+   which is correct, as there is no page left beside the panel to dim. */
 .side-menu__backdrop {
   position: absolute;
-  inset: 0;
-  background: rgba(13, 27, 46, 0.5);
+  inset-block: 0;
+  left: 0;
+  right: min(22rem, 100%);
+  background: rgba(13, 27, 46, 0.32);
   opacity: 0;
   transition: opacity 0.35s ease;
 }
@@ -266,12 +304,39 @@ section[id] {
   width: 100%;
   max-width: 22rem;
   flex-direction: column;
-  background: var(--color-paper);
+  /* The panel carries the surface itself: translucent paper, a border and a
+     shadow, so it is visible on its own terms. What it does *not* carry is the
+     blur, because a blurred element cannot be slid in from off-screen: out
+     there it has no page behind it to sample and paints as a flat light box.
+     The blur lives on the still layer below. */
+  background: var(--glass-bg);
   color: var(--color-ink);
-  box-shadow: -12px 0 40px rgba(13, 27, 46, 0.18);
+  border-left: 1px solid rgba(13, 27, 46, 0.06);
+  box-shadow: -12px 0 40px rgba(13, 27, 46, 0.12);
   transform: translateX(100%);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Blur only, no surface of its own, held still at the panel's resting position
+   and faded in beneath it. Splitting it off this way is what lets the panel
+   slide without dragging a backdrop-filter across the viewport edge. If this
+   layer does nothing at all the menu still reads: the panel above carries the
+   paper, the border and the shadow on its own. */
+.side-menu__glass {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 100%;
+  max-width: 22rem;
+  backdrop-filter: var(--glass-blur);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.side-menu[data-open] .side-menu__glass {
+  opacity: 1;
+}
+
 .side-menu[data-open] .side-menu__panel {
   transform: none;
 }
@@ -295,6 +360,7 @@ section[id] {
 @media (prefers-reduced-motion: reduce) {
   .side-menu,
   .side-menu__backdrop,
+  .side-menu__glass,
   .side-menu__panel {
     transition: none;
   }
@@ -665,7 +731,8 @@ section[id] {
 }
 .site-header:not(.is-hero),
 .site-header.is-hero[data-scrolled] {
-  background-color: var(--color-paper);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
   color: var(--color-ink);
   box-shadow: 0 1px 0 rgba(13, 27, 46, 0.08);
 }

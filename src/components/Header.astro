@@ -5,6 +5,7 @@ import BookNow from './BookNow.astro';
 import Flag from './Flag.astro';
 import SideMenu from './SideMenu.astro';
 import Logo from './Logo.astro';
+import { collectionHref } from '../lib/partners';
 
 interface Props {
   locale: Locale;
@@ -52,9 +53,25 @@ const localeHrefs = Object.fromEntries(
 
   <!-- Main navigation -->
   <div class="site-header__bar mx-auto flex max-w-6xl items-center justify-between gap-6 px-4">
-    <a href={home} class="shrink-0" aria-label={siteName}>
-      <Logo siteName={siteName} variant="auto" />
-    </a>
+    {/* The wordmark, and the group it belongs to beside it. Two separate links,
+        because one cannot nest inside the other, and the group opens away from
+        the booking flow rather than navigating out of it.
+
+        Colour is inherited rather than set: the bar is white over the hero and
+        ink on paper, and the byline has to follow it in both. */}
+    <div class="flex shrink-0 items-center gap-3">
+      <a href={home} class="shrink-0" aria-label={siteName}>
+        <Logo siteName={siteName} variant="auto" />
+      </a>
+      <a
+        href={collectionHref(locale)}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden whitespace-nowrap text-[0.65rem] uppercase tracking-[0.18em] opacity-70 transition-opacity hover:opacity-100 sm:block"
+      >
+        {tr.byGroup}
+      </a>
+    </div>
 
     <nav class="hidden items-center gap-8 text-sm md:flex">
       {navItems.map((i) => (
@@ -89,10 +106,18 @@ const localeHrefs = Object.fromEntries(
     </div>
   </div>
 
-  {/* The side panel replaces what used to be a separate mobile-only dropdown:
-      one menu, at every width, listing the whole site rather than just the bar. */}
-  <SideMenu locale={locale} siteName={siteName} mewsConfigId={mewsConfigId} settings={settings} />
 </header>
+
+{/* The side panel replaces what used to be a separate mobile-only dropdown: one
+    menu, at every width, listing the whole site rather than just the bar.
+
+    Deliberately a sibling of the header, not a child. The header carries a
+    `backdrop-filter` in its solid state, and that makes an element a containing
+    block for `position: fixed` descendants: nested inside, this full-screen
+    overlay was being sized to the header box instead of the viewport, so off the
+    homepage it opened as a strip across the top. Its own z-index still puts it
+    over the header. */}
+<SideMenu locale={locale} siteName={siteName} mewsConfigId={mewsConfigId} settings={settings} />
 
 <script>
   const header = document.querySelector<HTMLElement>('[data-site-header]');

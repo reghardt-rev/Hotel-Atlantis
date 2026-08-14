@@ -71,10 +71,9 @@ export const ui = {
     directBook: {
       title: 'Book direct',
       items: [
-        'Our best rate, guaranteed',
-        'No booking fees',
-        'Special requests straight to the hotel',
-        'A reception desk that never closes',
+        '10% discount',
+        'Free late check-out',
+        'Free early check-in from 2pm',
       ],
     },
     gallery: {
@@ -125,6 +124,7 @@ export const ui = {
     },
     terms: 'Terms & conditions',
     partners: 'Part of the Highland Group',
+    byGroup: 'by Highland Group',
   },
   nl: {
     nav: { rooms: 'Kamers', offers: 'Aanbiedingen', activities: 'Activiteiten', location: 'Amsterdam', contact: 'Contact' },
@@ -170,10 +170,9 @@ export const ui = {
     directBook: {
       title: 'Direct boeken',
       items: [
-        'Onze beste prijs, gegarandeerd',
-        'Geen boekingskosten',
-        'Speciale wensen rechtstreeks naar het hotel',
-        'Een receptie die nooit sluit',
+        '10% korting',
+        'Gratis laat uitchecken',
+        'Gratis vroeg inchecken vanaf 14.00 uur',
       ],
     },
     gallery: {
@@ -224,6 +223,7 @@ export const ui = {
     },
     terms: 'Algemene voorwaarden',
     partners: 'Onderdeel van de Highland Group',
+    byGroup: 'van Highland Group',
   },
   de: {
     nav: { rooms: 'Zimmer', offers: 'Angebote', activities: 'Aktivitäten', location: 'Amsterdam', contact: 'Kontakt' },
@@ -269,10 +269,9 @@ export const ui = {
     directBook: {
       title: 'Direkt buchen',
       items: [
-        'Unser bester Preis, garantiert',
-        'Keine Buchungsgebühren',
-        'Sonderwünsche direkt ans Hotel',
-        'Eine Rezeption, die nie schließt',
+        '10% Rabatt',
+        'Kostenloser später Check-out',
+        'Kostenloser früher Check-in ab 14 Uhr',
       ],
     },
     gallery: {
@@ -323,6 +322,7 @@ export const ui = {
     },
     terms: 'Allgemeine Geschäftsbedingungen',
     partners: 'Teil der Highland Group',
+    byGroup: 'von Highland Group',
   },
 } as const;
 

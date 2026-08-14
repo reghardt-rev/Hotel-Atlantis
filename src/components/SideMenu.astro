@@ -50,6 +50,13 @@ const secondary = [
 <div class="side-menu" data-side-menu>
   <div class="side-menu__backdrop" data-menu-backdrop></div>
 
+  {/* The frosted pane, sitting still where the panel comes to rest. It is a
+      separate layer because a blurred element cannot be slid in from off-screen:
+      out there it has no page behind it to sample, so it paints as a flat light
+      box and only turns frosted once it crosses the edge. This fades instead,
+      and the panel above it carries the content in. */}
+  <div class="side-menu__glass" aria-hidden="true"></div>
+
   <aside class="side-menu__panel" role="dialog" aria-modal="true" aria-label={tr.menu.open}>
     <div class="flex items-center justify-between border-b border-stone-warm px-6 py-4">
       <a href={localePath(locale, '/')} data-menu-link>
