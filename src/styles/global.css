@@ -50,6 +50,11 @@ section[id] {
 :root {
   --glass-bg: rgba(245, 249, 255, 0.72);
   --glass-blur: blur(24px) saturate(125%);
+  /* The accent halo, worn by the two things on the hero that are asking for the
+     booking: the direct-booking badge and the booking bar itself. Two stops, a
+     tight bright one and a wide faint one, so it reads as light coming off the
+     panel rather than as a coloured border. */
+  --glow-accent: 0 0 30px 3px rgba(10, 99, 217, 0.55), 0 0 70px 8px rgba(10, 99, 217, 0.26);
 }
 @supports not (backdrop-filter: blur(1px)) {
   :root {
@@ -219,9 +224,18 @@ section[id] {
 .hero-panel--glow {
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.38),
-    0 0 30px 3px rgba(10, 99, 217, 0.55),
-    0 0 70px 8px rgba(10, 99, 217, 0.26),
+    var(--glow-accent),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+/* The booking bar takes the same halo. It is not a `.hero-panel` (it carries its
+   own white tint and ring), so it gets the glow with its own drop shadow rather
+   than the panel's, and this replaces the `shadow-xl` it used to wear: both set
+   `box-shadow`, and this file is emitted after Tailwind's utilities. */
+.booking-bar-glow {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.25),
+    var(--glow-accent);
 }
 
 /* A damped wobble that catches the eye and settles. It occupies the last fifth
