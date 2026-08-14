@@ -4,7 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PromoModal from '../components/PromoModal.astro';
 import CookieBanner from '../components/CookieBanner.astro';
-import { getSettings } from '../lib/content';
+import { getSettings, getHomepage } from '../lib/content';
 import { defaultLocale, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -25,6 +25,16 @@ const {
 } = Astro.props;
 
 const settings = await getSettings();
+
+// The variant script below runs site-wide, so that a conversion on any page can
+// be attributed to the arm the visitor is in. It should therefore only exist
+// while there is an arm: with no B slides, or with a side forced in Homepage
+// settings, there is no experiment, and assigning one would put a hero_variant
+// on every GA4 event for a test that is not running.
+const homepage = await getHomepage();
+const heroTestRunning =
+  ((homepage as any)?.heroVariant ?? 'test') === 'test' &&
+  (((homepage as any)?.carouselB?.length ?? 0) > 0);
 const siteName = settings?.siteName || 'Hotel Atlantis';
 const mewsConfigId = settings?.mewsConfigId || undefined;
 const gtmId = (settings?.gtmContainerId || import.meta.env.PUBLIC_GTM_ID || '').trim();
@@ -63,6 +73,7 @@ const ga4Id = (settings?.ga4MeasurementId || import.meta.env.PUBLIC_GA4_ID || ''
 
         No measurement here. This only records which arm the visitor is in;
         reporting it waits for analytics consent. */}
+    {heroTestRunning && (
     <script
       is:inline
       set:html={`(function(){try{
@@ -73,6 +84,7 @@ if(!m){document.cookie=n+'='+v+';path=/;max-age='+60*60*24*180+';samesite=lax'+(
 d.dataset.heroVariant=v;
 }catch(e){document.documentElement.dataset.heroVariant='a'}})()`}
     />
+    )}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

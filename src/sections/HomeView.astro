@@ -52,9 +52,17 @@ const toSlides = (list: any[], folder: string) =>
     })
     .filter((s: any) => s.image);
 
-const slides = toSlides(homepage?.carousel, 'carousel');
-// Populated only while a hero split test is running.
-const slidesB = toSlides((homepage as any)?.carouselB, 'carousel-b');
+const slidesA = toSlides(homepage?.carousel, 'carousel');
+const slidesBAll = toSlides((homepage as any)?.carouselB, 'carousel-b');
+
+// `heroVariant` in Homepage settings. Forcing a side ends the test rather than
+// rigging it: the chosen set is passed as the only set, so the page ships one
+// arm, assigns nobody and reports no experiment. Forcing B with no B slides
+// falls back to A rather than leaving the hero empty.
+const heroChoice = (homepage as any)?.heroVariant ?? 'test';
+const testing = heroChoice === 'test' && slidesBAll.length > 0;
+const slides = heroChoice === 'b' && slidesBAll.length > 0 ? slidesBAll : slidesA;
+const slidesB = testing ? slidesBAll : [];
 ---
 
 <Layout title={siteName} description={tagline} locale={locale} heroHeader={true} schema={schema}>

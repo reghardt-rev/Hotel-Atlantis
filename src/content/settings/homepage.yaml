@@ -11,14 +11,21 @@ carousel:
     alt: The breakfast room looking out onto the street
 carouselB:
   - image: /images/carousel-b/carouselB/0/image.jpg
-    alt: A canal cruise boat passing the Montelbaanstoren
-  - image: /images/carousel-b/carouselB/1/image.jpg
     alt: The front of Hotel Atlantis on Ceintuurbaan
-  - image: /images/carousel-b/carouselB/2/image.webp
-    alt: The tulip market on Museumplein, the Van Gogh Museum behind
-  - image: /images/carousel-b/carouselB/3/image.jpg
-    alt: A double room with its desk, coffee machine and balcony beyond
-  - image: /images/carousel-b/carouselB/4/image.avif
-    alt: A canal in the ring, lined with houseboats and elm trees
-  - image: /images/carousel-b/carouselB/5/image.webp
+  - image: /images/carousel-b/carouselB/1/image.webp
     alt: Amsterdam at dusk, the Sint Nicolaaskerk above the lights along the water
+  - image: /images/carousel-b/carouselB/2/image.jpg
+    alt: A double room with the balcony doors open onto the trees
+  - image: /images/carousel-b/carouselB/3/image.jpg
+    alt: A canal cruise boat passing the Montelbaanstoren
+  - image: /images/carousel-b/carouselB/4/image.jpg
+    alt: 'The Royal Breakfast laid out: eggs, bread, fruit and juice'
+  - image: /images/carousel-b/carouselB/5/image.jpg
+    alt: A double room with its desk, coffee machine and balcony beyond
+  - image: /images/carousel-b/carouselB/6/image.avif
+    alt: A canal in the ring, lined with houseboats and elm trees
+  - image: /images/carousel-b/carouselB/7/image.jpg
+    alt: A private balcony with bistro chairs, over the trees on Ceintuurbaan
+  - image: /images/carousel-b/carouselB/8/image.jpg
+    alt: The breakfast room looking out onto the street
+heroVariant: b

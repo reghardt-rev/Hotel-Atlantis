@@ -34,8 +34,8 @@ const { siteName, variant = 'dark', lockup = 'full', class: className } = Astro.
 // Intrinsic sizes of the exported files, given so the row cannot reflow as the
 // images arrive. Height is set in CSS; width follows from the aspect ratio.
 const SIZE = {
-  full: { w: 354, h: 240 },
-  compact: { w: 299, h: 186 },
+  full: { w: 348, h: 240 },
+  compact: { w: 301, h: 188 },
 } as const;
 
 const src = (l: 'full' | 'compact', tone: 'dark' | 'light') =>

@@ -452,6 +452,17 @@ export default config({
             itemLabel: (props) => props.fields.alt.value || 'Slide',
           },
         ),
+        heroVariant: fields.select({
+          label: 'Which hero to show',
+          description:
+            'Leave on the split test to let half of visitors see each. Choose A or B to force one on everybody, which ends the test: no variant is assigned, no cookie is set and nothing is reported to GA4 as hero_variant. Choosing B with no B slides falls back to A.',
+          options: [
+            { label: 'Split test \u2014 half see A, half see B', value: 'test' },
+            { label: 'Always show variant A', value: 'a' },
+            { label: 'Always show variant B', value: 'b' },
+          ],
+          defaultValue: 'test',
+        }),
       },
     }),
   },
