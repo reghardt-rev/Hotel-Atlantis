@@ -1,0 +1,69 @@
+---
+/**
+ * The hotel's Green Key certification, called out under the heading of the
+ * sustainability page rather than left as one more paragraph in the run.
+ *
+ * A certification is the one claim on that page a reader has no reason to take
+ * on trust, so it is the one thing given a surface of its own and a way out to
+ * the awarding body. Everything else on the page is us describing ourselves.
+ *
+ * The mark is a plain key drawn from the icon set the rest of the site uses, not
+ * the Green Key logo: we do not hold that artwork here, and an approximation of
+ * somebody's registered mark is worse than an honest icon beside their name. If
+ * the official asset arrives, swap the svg for it and keep the wording.
+ */
+import type { Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+
+const c = {
+  en: {
+    kicker: 'Certification',
+    title: 'Green Key certified',
+    body: 'Green Key is the international sustainability label for hotels. It is awarded against criteria covering energy, water, waste and the way a building is run, and it is checked by audit rather than taken on trust.',
+    link: 'About Green Key',
+  },
+  nl: {
+    kicker: 'Certificering',
+    title: 'Green Key gecertificeerd',
+    body: 'Green Key is het internationale keurmerk voor duurzame hotels. Het wordt toegekend op criteria voor energie, water, afval en de manier waarop een gebouw draait, en het wordt met een audit gecontroleerd in plaats van op ons woord aangenomen.',
+    link: 'Over Green Key',
+  },
+  de: {
+    kicker: 'Zertifizierung',
+    title: 'Green Key zertifiziert',
+    body: 'Green Key ist das internationale Nachhaltigkeitssiegel für Hotels. Es wird nach Kriterien für Energie, Wasser, Abfall und die Führung eines Hauses vergeben und per Audit geprüft, statt uns einfach geglaubt zu werden.',
+    link: 'Über Green Key',
+  },
+}[locale];
+---
+
+<aside class="mt-8 flex flex-col gap-5 rounded-2xl border border-stone-warm bg-sand p-6 sm:flex-row sm:p-7">
+  <span
+    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-clay"
+    aria-hidden="true"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="M10.7 12.3 21 2" />
+      <path d="m16.5 6.5 2.5 2.5" />
+    </svg>
+  </span>
+
+  <div>
+    <p class="text-xs uppercase tracking-[0.3em] text-clay">{c.kicker}</p>
+    <p class="mt-2 font-serif text-2xl leading-tight">{c.title}</p>
+    <p class="mt-3 text-sm leading-relaxed text-muted">{c.body}</p>
+    <a
+      href="https://www.greenkey.global/"
+      rel="noopener noreferrer"
+      target="_blank"
+      class="mt-3 inline-block text-sm font-medium text-clay hover:underline"
+    >
+      {c.link} →
+    </a>
+  </div>
+</aside>

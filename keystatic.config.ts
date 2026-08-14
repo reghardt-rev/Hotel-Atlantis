@@ -260,6 +260,13 @@ function pagesCollection(locale: Locale) {
     schema: {
       title: fields.slug({ name: { label: 'Page title' } }),
       seoDescription: fields.text({ label: 'SEO description', multiline: true }),
+      lead: fields.text({
+        label: 'Intro line',
+        description:
+          'Optional. One or two sentences under the page title, set larger than the body. Leave empty and the page starts straight into the first section.',
+        multiline: true,
+        validation: { isRequired: false },
+      }),
       sideImages: fields.array(
         fields.object({
           image: image('Photo', 'sustainability'),

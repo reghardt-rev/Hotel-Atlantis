@@ -9,6 +9,7 @@
  */
 import Layout from '../layouts/Layout.astro';
 import IllustratedPage from '../components/IllustratedPage.astro';
+import GreenKeyBadge from '../components/GreenKeyBadge.astro';
 import { getPage, renderMarkdoc } from '../lib/content';
 import { t, type Locale } from '../lib/i18n';
 
@@ -22,8 +23,14 @@ const page = await getPage(locale, 'sustainability');
 const body = page ? await renderMarkdoc(page.content) : '';
 const title = page?.title || tr.sustainability;
 const photos = ((page as any)?.sideImages ?? []) as { image: string; alt?: string }[];
+const lead = ((page as any)?.lead ?? '') as string;
 ---
 
 <Layout title={title} description={page?.seoDescription || ''} locale={locale}>
-  <IllustratedPage title={title} body={body} photos={photos} />
+  {/* The certification sits above the prose rather than inside it: it is the one
+      claim here that somebody else has checked, and a reader who wants only that
+      should not have to read four sections to find it. */}
+  <IllustratedPage title={title} body={body} photos={photos} lead={lead}>
+    <GreenKeyBadge locale={locale} />
+  </IllustratedPage>
 </Layout>
