@@ -154,11 +154,56 @@ const tr = t(locale);
     prev?.addEventListener('click', () => rail.scrollBy({ left: -step() }));
     next?.addEventListener('click', () => rail.scrollBy({ left: step() }));
 
+    /* ---- Depth -------------------------------------------------------------
+     * Cards shrink and fade towards the ends of the rail and come up to full
+     * size as they reach the middle, so the run reads as carrying on past both
+     * edges of the window rather than stopping at them.
+     *
+     * Measured off each card against the rail's own box, so it covers the loop's
+     * clones without knowing they exist, and holds at any card width the clamp
+     * settles on. The falloff runs over one card width in from each edge: wider
+     * and cards start dimming while they are still plainly in the middle of the
+     * rail, narrower and they snap.
+     *
+     * Scroll driven rather than played, like everything else on this page, so
+     * dragging the rail works it in both directions and it always matches where
+     * the rail actually is. `transform` and `opacity` only, so nothing here
+     * moves the layout or disturbs the scroll positions the loop depends on.
+     */
+    const MIN_SCALE = 0.86;
+    const MIN_FADE = 0.4;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let depthQueued = false;
+
+    function depth() {
+      depthQueued = false;
+      const box = rail!.getBoundingClientRect();
+      for (const node of Array.from(rail!.children) as HTMLElement[]) {
+        const card = node.getBoundingClientRect();
+        if (card.width === 0) continue;
+        const middle = card.left + card.width / 2;
+        const fromEdge = Math.min(middle - box.left, box.right - middle);
+        const t = fromEdge <= 0 ? 0 : fromEdge >= card.width ? 1 : fromEdge / card.width;
+        node.style.transform = `scale(${(MIN_SCALE + (1 - MIN_SCALE) * t).toFixed(4)})`;
+        node.style.opacity = (MIN_FADE + (1 - MIN_FADE) * t).toFixed(3);
+      }
+    }
+
+    function queueDepth() {
+      // Reduced motion keeps every card at full size: this is decoration, and it
+      // is the kind that moves.
+      if (still || depthQueued) return;
+      depthQueued = true;
+      requestAnimationFrame(depth);
+    }
+
     rail.addEventListener(
       'scroll',
       () => {
         wrap();
         sync();
+        queueDepth();
       },
       { passive: true },
     );
@@ -167,6 +212,7 @@ const tr = t(locale);
       () => {
         measure();
         sync();
+        queueDepth();
       },
       { passive: true },
     );
@@ -268,5 +314,8 @@ const tr = t(locale);
 
     setupLoop();
     sync();
+    // After the loop, so the clones it prepends are sized with everything else
+    // rather than sitting at full size until the first scroll.
+    queueDepth();
   }
 </script>
