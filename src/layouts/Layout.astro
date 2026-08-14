@@ -128,6 +128,23 @@ try{var c=JSON.parse(localStorage.getItem('atlantis-consent')||'null');if(c&&c.a
         set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`}
       />
     )}
+    {/* The opening: the hero photograph on its own for ten seconds, or until the
+        visitor does anything at all.
+
+        In the head, and not beside the rest of the homepage's scripts, because
+        the header is the first thing in the body. A flag set from further down
+        the page arrives after the header has already been parsed and painted,
+        and the only thing it can do by then is fade it back out again, which is
+        worse than not hiding it. Everything it hides has to still be ahead of
+        the browser when this runs.
+
+        Only on pages with a hero behind the header, which is the homepage.  */}
+    {heroHeader && (
+      <script
+        is:inline
+        set:html={`(function(){var r=document.documentElement,HOLD=1e4,KEY='atlantis-intro';try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var nav=performance.getEntriesByType('navigation')[0];if(nav&&nav.type==='reload')sessionStorage.removeItem(KEY);if(sessionStorage.getItem(KEY)==='1')return;sessionStorage.setItem(KEY,'1')}catch(e){return}r.setAttribute('data-intro','');var t,swallow=false,TYPES=['pointerdown','keydown','wheel','touchstart','scroll'];function end(){if(!r.hasAttribute('data-intro'))return;clearTimeout(t);r.removeAttribute('data-intro');TYPES.forEach(function(x){window.removeEventListener(x,intent,true)})}function intent(e){if(e.type==='pointerdown')swallow=true;end()}try{t=setTimeout(end,HOLD);TYPES.forEach(function(x){window.addEventListener(x,intent,true)});window.addEventListener('click',function(e){if(!swallow)return;swallow=false;e.preventDefault();e.stopPropagation()},true)}catch(e){r.removeAttribute('data-intro')}})();`}
+      />
+    )}
   </head>
   <body class="flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
     {gtmId && (

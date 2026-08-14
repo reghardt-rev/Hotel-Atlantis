@@ -188,6 +188,30 @@ section[id] {
   stroke-width: 1.1;
 }
 
+/* ---- Opening -----------------------------------------------------------------
+   The first few seconds of a visit: the photograph on its own, with everything
+   that normally sits over and around it faded out, until the timer runs down or
+   the visitor does anything at all.
+
+   Same contract as the scroll reveal. `data-intro` is set on the root by the
+   inline script at the top of HomeView and nothing here matches without it, so a
+   browser with no scripting gets the site as written rather than a hero with the
+   header and the booking bar missing and no way to bring them back. The
+   attribute is only ever set on the homepage, which is why these classes can sit
+   on the header and the banners, which are on every page.
+
+   Opacity and not `visibility` or `display`: the layout has to stay exactly as
+   it is underneath, or the header reserving no space would shift the page when
+   it returns. `pointer-events` comes off with it so nothing invisible can be
+   clicked in the meantime.                                                   */
+.intro-hide {
+  transition: opacity 900ms ease;
+}
+:root[data-intro] .intro-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---- Hero drag ---------------------------------------------------------------
    The hero's drag scrubs the crossfade by hand: Carousel.astro writes opacity
    straight onto the slides as the pointer moves. The slides carry a one second

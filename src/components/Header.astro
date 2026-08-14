@@ -30,7 +30,7 @@ const localeHrefs = Object.fromEntries(
 ) as Record<Locale, string>;
 ---
 
-<header class:list={['site-header', overHero && 'is-hero']} data-site-header data-home={home}>
+<header class:list={['site-header intro-hide', overHero && 'is-hero']} data-site-header data-home={home}>
   <!-- Utility bar (collapses on scroll) -->
   <div class="site-header__utility">
     {/* Language only. `justify-end` rather than `justify-between`, which with a

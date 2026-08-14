@@ -123,9 +123,14 @@ const bottomLead = Astro.slots.has('bottom-lead')
     {/* Clear of the fixed header, and sharing the booking bar's max-width so the
         two overlays line up on the same right-hand edge. Used for the ratings.
         Placed before the content column so the calendar, which opens upward out
-        of the booking bar, is painted over these rather than under them. */}
+        of the booking bar, is painted over these rather than under them.
+
+        Passed through: the band runs the full width of the hero to hold a
+        right-aligned column, so left to itself it would swallow every click
+        along the top of the photograph and leave the change-slide half beneath
+        it dead there. Nothing inside it is clickable. */}
     {hasTopRight && (
-      <div class="absolute inset-x-0 top-30 z-20 px-4 md:top-40">
+      <div class="intro-hide pointer-events-none absolute inset-x-0 top-30 z-20 px-4 md:top-40">
         {/* A column, so several overlays stack down the right edge rather than
             spreading along it: the rating, then the direct-booking box.
 
@@ -144,7 +149,12 @@ const bottomLead = Astro.slots.has('bottom-lead')
         than on the whole photograph. On a short phone the bar and tagline eat
         most of the hero, and centring on the photograph would drop the name
         straight on top of them. */}
-    <div class="absolute inset-0 z-20 flex flex-col px-4 pb-20 pt-30 text-white sm:pb-24 md:pt-40">
+    {/* Passed through for the same reason as the band above: this column covers
+        the whole photograph, and anything it intercepts is a click that never
+        reaches the half underneath. The tagline and the heading are text and
+        lose nothing by it. The booking bar takes its clicks back explicitly,
+        being the one thing in here made to be used. */}
+    <div class="intro-hide pointer-events-none absolute inset-0 z-20 flex flex-col px-4 pb-20 pt-30 text-white sm:pb-24 md:pt-40">
       <div class="flex flex-1 items-center justify-center text-center">
         <slot />
       </div>
@@ -154,27 +164,48 @@ const bottomLead = Astro.slots.has('bottom-lead')
           <Fragment set:html={bottomLead} />
         </div>
       )}
-      {hasBottom && <slot name="bottom" />}
+      {hasBottom && (
+        <div class="pointer-events-auto">
+          <slot name="bottom" />
+        </div>
+      )}
     </div>
 
     {dotCount > 1 && (
       <>
-        {/* Halfway down the outer edges, where a carousel is looked for, and out
-            of the way of both the headline in the middle and the booking bar
-            along the bottom. The dots keep the bottom centre to themselves. */}
+        {/* Each half of the photograph is the control, rather than a pair of
+            small targets on the edges. Still buttons, and still labelled: making
+            them plain divs would take the carousel away from a keyboard and from
+            a screen reader entirely, which is too high a price for a tidier
+            hero. Invisible until pointed at, when the chevron that used to sit
+            here fades up to say which way the half goes.
+
+            Below the overlays at `z-10`, not above them, so the booking bar and
+            the rating keep their own clicks. The two overlay layers are passed
+            through instead: see the note on `pointer-events` on each.
+
+            `data-carousel-zone` exempts them from the guard in the drag handler
+            that ignores presses starting on a button. Without it these would
+            cover the photograph and there would be nowhere left to drag from. */}
         <button
           type="button"
           data-carousel-prev
+          data-carousel-zone
           aria-label="Previous slide"
-          class="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
-        >‹</button>
+          class="intro-hide group absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none"
+        >
+          <span class="pointer-events-none absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">‹</span>
+        </button>
         <button
           type="button"
           data-carousel-next
+          data-carousel-zone
           aria-label="Next slide"
-          class="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white backdrop-blur transition hover:bg-white/40"
-        >›</button>
-        <div class="absolute bottom-4 left-1/2 z-20 flex h-10 -translate-x-1/2 items-center gap-2">
+          class="intro-hide group absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none"
+        >
+          <span class="pointer-events-none absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-2xl leading-none text-white opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">›</span>
+        </button>
+        <div class="intro-hide absolute bottom-4 left-1/2 z-20 flex h-10 -translate-x-1/2 items-center gap-2">
           {Array.from({ length: dotCount }, (_, i) => (
             <button
               type="button"
@@ -403,8 +434,13 @@ const bottomLead = Astro.slots.has('bottom-lead')
     root.addEventListener('pointerdown', (e) => {
       if (e.button > 0) return; // primary button, or any touch or pen contact
       // The overlays are things you press and type in. A drag that begins on one
-      // of them belongs to it, not to the carousel.
-      if ((e.target as HTMLElement).closest('a, button, input, select, textarea, label, [role="button"]')) return;
+      // of them belongs to it, not to the carousel. The change-slide halves are
+      // the exception: they are buttons as well, and they cover the photograph,
+      // so treating them like the rest would leave nowhere to drag from at all.
+      const held = (e.target as HTMLElement).closest(
+        'a, button, input, select, textarea, label, [role="button"]',
+      );
+      if (held && !held.hasAttribute('data-carousel-zone')) return;
       pointer = e.pointerId;
       startX = e.clientX;
       startY = e.clientY;
