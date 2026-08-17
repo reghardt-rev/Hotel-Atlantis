@@ -1,22 +1,21 @@
 ---
 /**
- * Guest review score over the hero, wearing the shared `hero-panel` glass so it
- * and the direct-booking badge in the opposite corner read as a matched pair
- * framing the photograph rather than as two unrelated boxes.
+ * Aggregate guest review score over the hero, wearing the shared `hero-panel`
+ * glass so it and the direct-booking badge in the opposite corner read as a
+ * matched pair framing the photograph rather than as two unrelated boxes.
  *
- * That panel is the site's light glass, so the type here is ink, not white. The
- * stars take the accent rather than ink: five ink stars at this size read as a
- * row of blots, and the accent is already the hero's colour for anything asking
- * to be looked at.
+ * That panel is the site's light glass, so the type here is ink, not white.
  *
  * The figures live in Site settings rather than in this file: a review score
  * moves every week, and it should be editable in Keystatic without a deploy.
  * The component renders nothing at all if the score is missing, so an empty
  * settings field simply removes the box.
  *
- * Booking.com publishes scores out of 10. The stars show the same number on a
- * 5-point scale rather than a second, different rating.
+ * This is now the fallback rather than the usual case: the hero shows the
+ * ReviewSlideshow when there are guest reviews to show, and drops back to this
+ * single aggregate figure when the review list is empty.
  */
+import Stars from './Stars.astro';
 import { t, localeTags, type Locale } from '../lib/i18n';
 
 interface Props {
@@ -32,10 +31,6 @@ const tr = t(locale);
 const tag = localeTags[locale];
 const fmtScore = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const fmtCount = new Intl.NumberFormat(tag);
-
-const filled = score == null ? 0 : Math.max(0, Math.min(5, score / 2));
-// Unique per render so several of these on one page cannot collide on gradient ids.
-const uid = 'rs' + Math.random().toString(36).slice(2, 8);
 
 const scoreText = score == null ? '' : fmtScore.format(score);
 const countText = reviews == null ? '' : fmtCount.format(reviews);
@@ -55,25 +50,7 @@ const label = [
     aria-label={label}
   >
     <div class="flex items-center gap-2">
-      <div class="flex items-center gap-0.5 text-clay" aria-hidden="true">
-        {Array.from({ length: 5 }, (_, i) => {
-          const pct = Math.round(Math.max(0, Math.min(1, filled - i)) * 100);
-          return (
-            <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" focusable="false">
-              <defs>
-                <linearGradient id={`${uid}-${i}`} x1="0" x2="1" y1="0" y2="0">
-                  <stop offset={`${pct}%`} stop-color="currentColor" />
-                  <stop offset={`${pct}%`} stop-color="currentColor" stop-opacity="0.25" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M10 1.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.88l-5.2 2.73.99-5.79-4.21-4.1 5.82-.85z"
-                fill={`url(#${uid}-${i})`}
-              />
-            </svg>
-          );
-        })}
-      </div>
+      <Stars score={score} />
       <span class="text-sm font-medium leading-none text-ink">{scoreText}</span>
     </div>
 

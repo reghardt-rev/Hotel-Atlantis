@@ -375,6 +375,49 @@ export async function getDirectBooking(
   };
 }
 
+/** One guest review in the rotating panel on the hero. */
+export type Review = { text: string; score: number; author: string };
+
+/** How many of the list the hero panel will actually show. */
+export const MAX_HERO_REVIEWS = 10;
+
+/**
+ * The guest reviews shown on the hero, in the order they are listed.
+ *
+ * One list for all three languages, with a translation per review rather than a
+ * list per language, so the score and the running order cannot drift apart
+ * between them. Each review carries `nl` and `de` alongside the English `text`;
+ * a language left blank falls back to the English, so a review added today is
+ * live in all three immediately and improves when its translations land.
+ *
+ * Rows are judged on the English, not on the translation: a row with no English
+ * text or no score is half-finished and is dropped rather than rendered as a
+ * blank slide. Dropping it before the cap rather than after keeps the same ten
+ * reviews on every language.
+ */
+export async function getReviews(locale: Locale): Promise<Review[]> {
+  const entry = await (reader.singletons as any).reviews?.read();
+
+  return (entry?.reviews ?? [])
+    .map((r: any) => ({
+      // There is no `en` field: English is the `text` above, which is also what
+      // every untranslated language falls back to.
+      translated: locale === 'en' ? '' : String(r?.[locale] ?? '').trim(),
+      original: String(r?.text ?? '').trim(),
+      score: Number(r?.score),
+      author: String(r?.author ?? '').trim(),
+    }))
+    .filter((r: any) => r.original && Number.isFinite(r.score))
+    .slice(0, MAX_HERO_REVIEWS)
+    .map(
+      (r: any): Review => ({
+        text: r.translated || r.original,
+        score: r.score,
+        author: r.author,
+      }),
+    );
+}
+
 export async function getSettings() {
   return reader.singletons.settings.read();
 }

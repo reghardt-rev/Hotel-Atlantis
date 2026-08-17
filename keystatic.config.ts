@@ -346,6 +346,74 @@ function directBookingSingleton(locale: Locale) {
 }
 
 /**
+ * The guest reviews that rotate through the panel on the hero.
+ *
+ * One list rather than three, with the translations hanging off each review.
+ * Everything except the words is a fact about the review and not about a
+ * language: the score, who said it, and where it sits in the running order are
+ * the same in all three. Three separate lists would mean keeping those in step
+ * by hand, and they would drift the first time a review was added to one and
+ * not the others.
+ *
+ * The English text is the original and the fallback: a language left blank
+ * shows it as written rather than showing nothing, so a new review is live
+ * everywhere the moment it is added and improves as the translations arrive.
+ *
+ * The panel shows the first ten and ignores the rest, so old reviews can be
+ * kept below the line rather than deleted. An empty list puts the hero back to
+ * the single aggregate score from Site settings.
+ */
+const reviewsSingleton = singleton({
+  label: 'Guest reviews',
+  path: 'src/content/settings/reviews',
+  format: { data: 'yaml' },
+  schema: {
+    reviews: fields.array(
+      fields.object({
+        text: fields.text({
+          label: 'What the guest said (English)',
+          description:
+            'The guest’s own words, and the fallback for any language left untranslated below. The panel sits over the hero photograph and clips anything past six lines, which is roughly 240 characters.',
+          multiline: true,
+        }),
+        nl: fields.text({
+          label: 'Nederlands',
+          description: 'Shown on /nl. Leave blank and the Dutch pages show the English above.',
+          multiline: true,
+          validation: { isRequired: false },
+        }),
+        de: fields.text({
+          label: 'Deutsch',
+          description: 'Shown on /de. Leave blank and the German pages show the English above.',
+          multiline: true,
+          validation: { isRequired: false },
+        }),
+        score: fields.number({
+          label: 'Score out of 10',
+          description: 'As the guest gave it, e.g. 9.2. Drawn as stars alongside the number.',
+          validation: { min: 0, max: 10 },
+        }),
+        author: fields.text({
+          label: 'Who said it (optional)',
+          description:
+            'Shown in small type under the quote, e.g. "Maria, Spain". Leave blank to credit only the review source from Site settings.',
+          validation: { isRequired: false },
+        }),
+      }),
+      {
+        label: 'Reviews, first to last',
+        description:
+          'The order they rotate in on the hero. Drag to reorder. The first ten are shown; anything below that is kept but not published.',
+        itemLabel: (props) =>
+          [props.fields.score.value != null ? `${props.fields.score.value}/10` : '', props.fields.text.value]
+            .filter(Boolean)
+            .join(' · ') || 'Review',
+      },
+    ),
+  },
+});
+
+/**
  * Dev edits the files on disk; everything else commits through GitHub.
  *
  * The one exception is creating the GitHub App. Keystatic's setup wizard writes
@@ -369,7 +437,7 @@ export default config({
   ui: {
     brand: { name: 'Hotel Atlantis' },
     navigation: {
-      Settings: ['settings', 'homepage'],
+      Settings: ['settings', 'homepage', 'reviews'],
       Shared: ['roomPhotos', 'gallery', 'galleryOrder'],
       English: ['rooms_en', 'offers_en', 'facilities_en', 'activities_en', 'pages_en', 'directBooking_en'],
       Nederlands: ['rooms_nl', 'offers_nl', 'facilities_nl', 'activities_nl', 'pages_nl', 'directBooking_nl'],
@@ -411,6 +479,7 @@ export default config({
         ),
       },
     }),
+    reviews: reviewsSingleton,
     directBooking_en: directBookingSingleton('en'),
     directBooking_nl: directBookingSingleton('nl'),
     directBooking_de: directBookingSingleton('de'),

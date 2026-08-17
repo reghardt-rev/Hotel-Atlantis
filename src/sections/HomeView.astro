@@ -5,6 +5,7 @@ import BookingBar from '../components/BookingBar.astro';
 import CityScenery from '../components/CityScenery.astro';
 import Carousel from '../components/Carousel.astro';
 import ReviewScore from '../components/ReviewScore.astro';
+import ReviewSlideshow from '../components/ReviewSlideshow.astro';
 import DirectBookingBox from '../components/DirectBookingBox.astro';
 import RoomRail from '../components/RoomRail.astro';
 import OfferCard from '../components/OfferCard.astro';
@@ -14,7 +15,7 @@ import ActivitiesSection from '../components/sections/ActivitiesSection.astro';
 import LocationSection from '../components/sections/LocationSection.astro';
 import FaqSection from '../components/sections/FaqSection.astro';
 import ContactSection from '../components/sections/ContactSection.astro';
-import { listRooms, listOffers, getSettings, getHomepage, getDirectBooking } from '../lib/content';
+import { listRooms, listOffers, getSettings, getHomepage, getDirectBooking, getReviews } from '../lib/content';
 import { t, localePath, type Locale } from '../lib/i18n';
 import { hotelSchema, graph } from '../lib/schema';
 
@@ -27,6 +28,10 @@ const tr = t(locale);
 const settings = await getSettings();
 const homepage = await getHomepage();
 const directBooking = await getDirectBooking(locale);
+// One list, translated per review: see the note on getReviews. Empty until the
+// first quote is entered in Keystatic, which puts the aggregate score box back
+// on the hero rather than leaving the corner bare.
+const reviews = await getReviews(locale);
 // The whole set: the rail loops, so there is no last card to run out of.
 const rooms = await listRooms(locale);
 const offers = await listOffers(locale);
@@ -170,14 +175,33 @@ const slidesB = testing ? slidesBAll : [];
           {tagline}
         </h1>
       )}
-      <ReviewScore
-        slot="top-right"
-        locale={locale}
-        score={settings?.reviewScore}
-        reviews={settings?.reviewCount}
-        source={settings?.reviewSource}
-      />
-      <DirectBookingBox slot="top-right" title={directBooking.title} items={directBooking.items} />
+      {/* Both overlays go into the slot through one Fragment rather than as two
+          children carrying `slot="top-right"` each. A `slot` attribute written
+          inside an expression hands Astro the whole expression as that slot's
+          content, which silently drops any sibling claiming the same name: the
+          direct-booking box disappeared off the hero when the rating below was
+          first made conditional. The Fragment renders no element, so the two
+          panels are still the flex children of the overlay column, rating first.
+          If either of these ever becomes conditional again, keep the condition
+          inside here. */}
+      <Fragment slot="top-right">
+        {reviews.length > 0 ? (
+          <ReviewSlideshow locale={locale} reviews={reviews} source={settings?.reviewSource} />
+        ) : (
+          <ReviewScore
+            locale={locale}
+            score={settings?.reviewScore}
+            reviews={settings?.reviewCount}
+            source={settings?.reviewSource}
+          />
+        )}
+        <DirectBookingBox
+          locale={locale}
+          title={directBooking.title}
+          items={directBooking.items}
+          configId={mewsConfigId}
+        />
+      </Fragment>
       <BookingBar slot="bottom" locale={locale} />
     </Carousel>
   ) : (

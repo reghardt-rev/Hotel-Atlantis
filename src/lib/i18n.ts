@@ -54,6 +54,7 @@ export const ui = {
     backToRooms: '← All rooms',
     reviewsLabel: 'reviews',
     reviewsOn: 'on',
+    reviewGoTo: 'Show review {n}',
     booking: {
       arrival: 'Arrival',
       departure: 'Departure',
@@ -155,6 +156,7 @@ export const ui = {
     backToRooms: '← Alle kamers',
     reviewsLabel: 'beoordelingen',
     reviewsOn: 'op',
+    reviewGoTo: 'Toon beoordeling {n}',
     booking: {
       arrival: 'Aankomst',
       departure: 'Vertrek',
@@ -253,6 +255,7 @@ export const ui = {
     backToRooms: '← Alle Zimmer',
     reviewsLabel: 'Bewertungen',
     reviewsOn: 'auf',
+    reviewGoTo: 'Bewertung {n} anzeigen',
     booking: {
       arrival: 'Anreise',
       departure: 'Abreise',

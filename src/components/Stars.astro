@@ -1,0 +1,50 @@
+---
+/**
+ * A five-star row for a score published out of 10.
+ *
+ * Booking.com scores are out of 10; the stars show that same number on a
+ * 5-point scale rather than a second, different rating. Partial stars are a
+ * gradient stop rather than a half-star glyph, so 7.4 draws as 7.4 and not as
+ * "three and a bit".
+ *
+ * The stars take the accent rather than ink: five ink stars at this size read as
+ * a row of blots, and the accent is already the hero's colour for anything
+ * asking to be looked at.
+ *
+ * Decorative by definition. Whatever renders this is responsible for saying the
+ * score in words for a screen reader, which is why the row is aria-hidden.
+ */
+interface Props {
+  /** Out of 10. */
+  score: number;
+  class?: string;
+  /** Size of a single star, as Tailwind sizing utilities. */
+  starClass?: string;
+}
+const { score, class: className = '', starClass = 'h-3.5 w-3.5' } = Astro.props;
+
+const filled = Math.max(0, Math.min(5, score / 2));
+// Unique per render so several of these on one page cannot collide on gradient
+// ids. A hero with ten review slides has ten of them.
+const uid = 'st' + Math.random().toString(36).slice(2, 8);
+---
+
+<div class:list={['flex items-center gap-0.5 text-clay', className]} aria-hidden="true">
+  {Array.from({ length: 5 }, (_, i) => {
+    const pct = Math.round(Math.max(0, Math.min(1, filled - i)) * 100);
+    return (
+      <svg viewBox="0 0 20 20" class:list={[starClass]} focusable="false">
+        <defs>
+          <linearGradient id={`${uid}-${i}`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset={`${pct}%`} stop-color="currentColor" />
+            <stop offset={`${pct}%`} stop-color="currentColor" stop-opacity="0.25" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M10 1.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.88l-5.2 2.73.99-5.79-4.21-4.1 5.82-.85z"
+          fill={`url(#${uid}-${i})`}
+        />
+      </svg>
+    );
+  })}
+</div>
