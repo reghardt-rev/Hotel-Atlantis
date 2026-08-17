@@ -9,11 +9,20 @@
  * the reason not to go back there to act on it. Of the two it is the one making
  * a case, so it carries the halo.
  *
- * The whole panel opens the booking engine, not just the button inside it: the
- * box is one argument, and a reader who is convinced by it should not have to
- * find the small target at the bottom. The button is still there and still real,
- * because a panel that is only clickable by script is unreachable from a
- * keyboard; the panel simply forwards its clicks to it.
+ * The panel itself is the button. It carries `.distributor`, so Mews opens the
+ * booking engine from it directly, and `data-book-location`, so it reports to
+ * GA4 exactly as any Book now button does. There is no separate button inside
+ * it: the box is one argument, and asking a reader already convinced by it to
+ * find a small target at the bottom only adds a step.
+ *
+ * A div is not a button, so it is given the part of one that matters: a role, a
+ * place in the tab order, a label, a focus ring, and a key handler, because
+ * Enter on a focusable div fires no click of its own. Without those the panel
+ * would be reachable by mouse alone.
+ *
+ * The Mews loader and the click tracker both live in BookNow.astro and bind to
+ * every `.distributor` on the page, this panel included. The header and the side
+ * menu each render one, so that script is always present wherever this box is.
  *
  * It reports itself to GA4 as `direct_booking_box` rather than sharing a name
  * with the header or the booking bar, so the panel can be judged on its own: it
@@ -23,7 +32,6 @@
  *
  * Copy is edited per language at /keystatic under "Book direct".
  */
-import BookNow from './BookNow.astro';
 import type { DirectBookingBenefit } from '../lib/content';
 import { t, type Locale } from '../lib/i18n';
 
@@ -44,8 +52,14 @@ const tr = t(locale);
     wants its own has to say so. The review panel above does the same. */}
 <div
   data-direct-booking
+  data-mews-config={configId}
+  data-book-location="direct_booking_box"
+  role="button"
+  tabindex="0"
+  aria-label={`${title}. ${tr.book}`}
   class:list={[
-    'hero-panel hero-panel--glow hero-panel--jiggle pointer-events-auto w-fit max-w-[18rem] cursor-pointer px-5 py-4 text-ink',
+    'distributor hero-panel hero-panel--glow hero-panel--jiggle pointer-events-auto w-fit max-w-[18rem] cursor-pointer px-5 py-4 text-ink',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2',
     className,
   ]}
 >
@@ -73,28 +87,18 @@ const tr = t(locale);
     ))}
   </ul>
 
-  <BookNow
-    configId={configId}
-    label={tr.book}
-    location="direct_booking_box"
-    class="mt-4 w-full justify-center !px-5 !py-2 text-[0.8rem]"
-  />
 </div>
 
 <script>
-  // The panel forwards its clicks to the button inside it, rather than carrying
-  // `.distributor` itself. Two triggers on one box would open the engine twice
-  // and report two clicks for one intent, and the button is the one that a
-  // keyboard can reach, so it is the one that counts.
+  // Enter and Space on a focusable div do nothing on their own, so they are
+  // turned into the click that Mews and the tracker are both already listening
+  // for. Space is also the page-down key, and would scroll the hero out from
+  // under the reader on its way to opening the engine.
   document.querySelectorAll<HTMLElement>('[data-direct-booking]').forEach((panel) => {
-    const button = panel.querySelector<HTMLElement>('.distributor');
-    if (!button) return;
-
-    panel.addEventListener('click', (e) => {
-      // A click that already landed on the button is on its way to Mews and to
-      // the tracker; forwarding it would double both.
-      if ((e.target as HTMLElement).closest('.distributor')) return;
-      button.click();
+    panel.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      e.preventDefault();
+      panel.click();
     });
   });
 </script>
