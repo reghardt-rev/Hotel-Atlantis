@@ -924,6 +924,35 @@ section[id] {
 
 /* ---- Two-tier site header ---------------------------------------------------
    .is-hero      -> transparent over the hero (white text)
+  /* The knockout carries its own shade, because the header's gradient has
+     almost nothing left to give by the time it reaches the mark: it starts at
+     0.35 black and fades out across the whole header, and the bar sits in the
+     bottom two thirds of that, so the wordmark stands in about 20% black at its
+     top edge and 3% at its foot. On a pale slide, a white sky or a sunlit
+     facade, that is not enough and the mark half disappears.
+
+     Shaped by the PNG's alpha rather than laid behind it as a box, so what
+     darkens is the few pixels around the letterforms and the trident, not a
+     rectangle in the corner of the photograph.
+
+     Three layers, because the mark is three sizes at once and a single shadow
+     cannot serve them. The wide soft one lifts the trident and ATLANTIS off
+     whatever is behind them. It does almost nothing for HOTEL · AMSTERDAM,
+     which is 6% of the mark's height, six pixels at the desktop size and drawn
+     in hairline serif strokes: a 16px blur spreads so far past letters that
+     small that it never builds contrast at the stroke itself. The last layer is
+     there for that line alone, offset nowhere and blurred barely at all, so it
+     darkens the ring of pixels each stroke actually sits on. The middle one
+     joins the two.
+
+     Unconditional rather than scoped to the hero state. It is invisible while
+     the mark is, and removing it the moment the header turns to paper would pop
+     it out mid-crossfade. The dark mark takes none of this: a shadow under ink
+     on paper only reads as muddy. */
+  filter:
+    drop-shadow(0 2px 16px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.85));
    [data-scrolled] or non-hero -> solid paper background with ink text
    The utility bar collapses once scrolled.                                   */
 .site-header {
