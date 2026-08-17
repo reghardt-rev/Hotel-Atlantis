@@ -121,11 +121,53 @@ const tr = t(locale);
       if (firstCopy) unit = originals[0].offsetLeft - firstCopy.offsetLeft;
     }
 
+    // Bring the scroll back inside the middle run. Modulo rather than a single
+    // ±unit correction: one flick of a trackpad can cover more than a whole run,
+    // and a single correction would leave it outside the window still, to be
+    // corrected again on the next event.
     function wrap() {
       if (!looping || unit <= 0) return;
       const at = rail!.scrollLeft;
-      if (at < unit * 0.5) jumpTo(at + unit);
-      else if (at > unit * 1.5) jumpTo(at - unit);
+      const low = unit * 0.5;
+      const wrapped = low + ((((at - low) % unit) + unit) % unit);
+      // Sub-pixel differences are the browser's own rounding, not a wrap.
+      if (Math.abs(wrapped - at) > 1) jumpTo(wrapped);
+    }
+
+    /* The wrap waits for the scroll to stop, unless a drag is driving it.
+     *
+     * A flick on a trackpad hands the scroll to the browser's own inertia, which
+     * is gliding towards a target it worked out before we touched anything.
+     * Moving `scrollLeft` underneath that does not cancel it: the glide carries
+     * on to where it was already going, which is now a run away from where the
+     * content is, and the next wrap hauls it back. That fight is the juddering
+     * you get on a fast swipe. Waiting for the scroll to finish costs nothing:
+     * the copies either side are a full run each, some four screens' worth, and
+     * no single flick crosses one.
+     *
+     * A pointer drag is the exception. It sets `scrollLeft` from its own deltas
+     * on every move, so a jump mid-drag is invisible to it — and deferring there
+     * would let a long drag run off the end of the copies.
+     */
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    function wrapWhenSettled() {
+      if (rail!.classList.contains('is-dragging')) {
+        wrap();
+        return;
+      }
+      // Flicks landing on top of one another never let the scroll settle, and
+      // each one spends more of the runway. Close enough to a real end, take the
+      // judder: it is the only thing left between the reader and a rail that
+      // stops dead in the middle of a gesture.
+      const at = rail!.scrollLeft;
+      const end = rail!.scrollWidth - rail!.clientWidth;
+      if (at < unit * 0.15 || at > end - unit * 0.15) {
+        clearTimeout(settle);
+        wrap();
+        return;
+      }
+      clearTimeout(settle);
+      settle = setTimeout(wrap, 140);
     }
 
     // One card plus the gap between them, measured rather than assumed: the card
@@ -204,12 +246,17 @@ const tr = t(locale);
     rail.addEventListener(
       'scroll',
       () => {
-        wrap();
+        wrapWhenSettled();
         sync();
         queueDepth();
       },
       { passive: true },
     );
+    // Where it exists, the browser says when the scroll has finished — including
+    // the end of an inertial glide and of the arrows' smooth scroll. The timer
+    // above is the fallback for browsers that do not fire it; both landing is
+    // harmless, since a wrap that is already inside the window does nothing.
+    rail.addEventListener('scrollend', wrap, { passive: true });
     window.addEventListener(
       'resize',
       () => {
