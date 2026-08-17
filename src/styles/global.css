@@ -109,6 +109,21 @@ section[id] {
   }
 }
 
+/* The bar shrinks from its own bottom edge, so the height it gives back all
+   comes off the top, where the overlays are, and it stays put against the foot
+   of the hero rather than lifting away from it. Same easing as the overlays for
+   the same reason: the two are resized by one measurement and should settle
+   together. */
+[data-booking-bar] {
+  transform-origin: bottom center;
+  transition: transform 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-booking-bar] {
+    transition: none;
+  }
+}
+
 /* Carries the hero type over bright slides without darkening the photo itself. */
 .hero-type {
   text-shadow:
@@ -909,21 +924,6 @@ section[id] {
 /* Paper header is the default; the knockout only appears over the photograph. */
 .site-logo__light {
   opacity: 0;
-}
-.site-header.is-hero:not([data-scrolled]) .site-logo__dark {
-  opacity: 0;
-}
-.site-header.is-hero:not([data-scrolled]) .site-logo__light {
-  opacity: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-logo img {
-    transition: none;
-  }
-}
-
-/* ---- Two-tier site header ---------------------------------------------------
-   .is-hero      -> transparent over the hero (white text)
   /* The knockout carries its own shade, because the header's gradient has
      almost nothing left to give by the time it reaches the mark: it starts at
      0.35 black and fades out across the whole header, and the bar sits in the
@@ -953,6 +953,21 @@ section[id] {
     drop-shadow(0 2px 16px rgba(0, 0, 0, 0.55))
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.85));
+}
+.site-header.is-hero:not([data-scrolled]) .site-logo__dark {
+  opacity: 0;
+}
+.site-header.is-hero:not([data-scrolled]) .site-logo__light {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-logo img {
+    transition: none;
+  }
+}
+
+/* ---- Two-tier site header ---------------------------------------------------
+   .is-hero      -> transparent over the hero (white text)
    [data-scrolled] or non-hero -> solid paper background with ink text
    The utility bar collapses once scrolled.                                   */
 .site-header {

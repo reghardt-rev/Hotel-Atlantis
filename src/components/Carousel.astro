@@ -254,6 +254,14 @@ const bottomLead = Astro.slots.has('bottom-lead')
    * bar and scaled down by exactly as much as it takes to clear it. Anything
    * that changes either height re-runs it, which on a phone mostly means the
    * address bar collapsing and dvh changing under us.
+   *
+   * The bar gives ground too, once the column has given all it can. Shrinking
+   * only the panels used to bottom out at their floor and leave them sitting on
+   * the bar anyway: the column is the taller of the two and the one that grew
+   * when the rating became a stack of reviews, so on a short screen there is
+   * simply not enough room for both at full size. The bar goes second and by
+   * less, because it is the thing on this page that is meant to be used and its
+   * fields have to stay big enough to hit.
    */
   {
     const overlays = document.querySelector<HTMLElement>('[data-hero-overlays]');
@@ -262,20 +270,58 @@ const bottomLead = Astro.slots.has('bottom-lead')
     if (overlays && bar) {
       const MIN_GAP = 16; // px of daylight to leave between the two
       const FLOOR = 0.55; // below this the type stops being readable anyway
+      const BAR_FLOOR = 0.8; // the bar is a form; its targets stay thumb-sized
+      const reviews = overlays.querySelector<HTMLElement>('[data-reviews]');
 
       function fit() {
         // Measure at natural size: a rect read while scaled would feed the last
-        // scale back into the next one and creep smaller on every resize.
+        // scale back into the next one and creep smaller on every resize. The
+        // same goes for the two things that can be taken away below, which are
+        // put back before anything is measured.
         overlays!.style.transform = '';
+        overlays!.style.visibility = '';
+        bar!.style.transform = '';
+        if (reviews) reviews.hidden = false;
         void overlays!.offsetWidth;
 
-        const col = overlays!.getBoundingClientRect();
         const barRect = bar!.getBoundingClientRect();
-        if (col.height <= 0) return;
+        let col = overlays!.getBoundingClientRect();
+        if (col.height <= 0 || barRect.height <= 0) return;
 
         const room = barRect.top - MIN_GAP - col.top;
+        // How much height the bar is willing to hand back, at its own floor.
+        const barGive = barRect.height * (1 - BAR_FLOOR);
+
+        // Everything scaled as far as it will go and the two would still meet.
+        // The reviews are the taller panel and the one that is social proof
+        // rather than an offer, so they are what goes and the box keeps the
+        // corner. This is the case a landscape phone lands in.
+        if (reviews && col.height * FLOOR > room + barGive) {
+          reviews.hidden = true;
+          void overlays!.offsetWidth;
+          col = overlays!.getBoundingClientRect();
+        }
+
+        // Shorter still, and not even the box and the bar fit together. An
+        // empty corner is better than a panel sitting on the booking form,
+        // which is the one thing on this hero meant to be used.
+        if (col.height * FLOOR > room + barGive) {
+          overlays!.style.visibility = 'hidden';
+          return;
+        }
+
         const scale = Math.min(1, Math.max(FLOOR, room / col.height));
         if (scale < 0.999) overlays!.style.transform = `scale(${scale.toFixed(3)})`;
+
+        // What the column could not give up, the bar makes up. Scaling it from
+        // its bottom edge frees height at the top, which is the only edge that
+        // matters here: it stays exactly where it was against the foot of the
+        // hero and simply stops reaching so far up.
+        const shortfall = col.height * scale - room;
+        if (shortfall > 0) {
+          const barScale = Math.max(BAR_FLOOR, (barRect.height - shortfall) / barRect.height);
+          if (barScale < 0.999) bar!.style.transform = `scale(${barScale.toFixed(3)})`;
+        }
       }
 
       let queued = false;
