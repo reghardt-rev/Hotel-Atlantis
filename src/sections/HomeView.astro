@@ -229,7 +229,7 @@ const slidesB = testing ? slidesBAll : [];
 
   {/* Offers */}
   {offers.length > 0 && (
-    <section id="offers" class="bg-sand">
+    <section id="offers" class="reveal-frame bg-sand">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
         {/* Heading and the way through to the full list on one line, as the
             activities section does it. */}
@@ -242,7 +242,7 @@ const slidesB = testing ? slidesBAll : [];
             {tr.allOffers} →
           </a>
         </div>
-        <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" data-reveal-group>
+        <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" data-reveal-group="right">
           {offers.map((offer) => <OfferCard offer={offer} locale={locale} mewsConfigId={mewsConfigId} />)}
         </div>
       </div>

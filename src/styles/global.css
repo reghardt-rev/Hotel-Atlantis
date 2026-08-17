@@ -362,8 +362,8 @@ section[id] {
 }
 
 /* ---- Scroll reveal -----------------------------------------------------------
-   The homepage arrives a section at a time as it is scrolled to: headings rise a
-   little, the photography under them fades up behind it.
+   The page arrives a block at a time as it is scrolled to, each one sliding in
+   from the side rather than fading up where it already is.
 
    Everything here hangs off `data-reveal` on the root element, which the inline
    script at the top of HomeView sets before any of the page below it is parsed.
@@ -376,21 +376,46 @@ section[id] {
    Two shapes. `.reveal` is one thing arriving on its own, a heading or a rail.
    `[data-reveal-group]` is a row of things arriving one after another, and its
    children are hidden from the start here rather than being marked up by script,
-   which is what keeps the cards from flashing before they are caught.          */
+   which is what keeps the cards from flashing before they are caught.
+
+   Direction is from the left unless the thing sits against the right-hand edge
+   of its row, which takes `--right` and arrives from the edge it belongs to.
+
+   The opacity ramp is deliberately much shorter than the travel: this is a
+   slide, not a fade. It is here only so that nothing is ever caught sitting in
+   its offset position in the band between the bottom of the window and the
+   trigger line, which is what reads as a broken layout rather than an entrance. */
 :root[data-reveal] .reveal,
 :root[data-reveal] [data-reveal-group] > * {
   opacity: 0;
-  transform: translateY(1.5rem);
-  /* Out-quint: most of the distance is covered early, so it reads as arriving
-     and settling rather than drifting in at a constant speed. */
+  transform: translateX(-3.5rem);
+  /* Out-quint: most of the distance is covered early, so it reads as flying in
+     and settling rather than drifting at a constant speed. */
   transition:
-    opacity 0.7s ease,
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.3s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-reveal] .reveal--right,
+:root[data-reveal] [data-reveal-group='right'] > * {
+  transform: translateX(3.5rem);
 }
 :root[data-reveal] .reveal.is-in,
 :root[data-reveal] [data-reveal-group].is-in > * {
   opacity: 1;
   transform: none;
+}
+
+/* A phone has no room to give: 56px of travel on a column that already runs to
+   both margins is most of the screen, and the slide reads as a lurch. */
+@media (max-width: 640px) {
+  :root[data-reveal] .reveal,
+  :root[data-reveal] [data-reveal-group] > * {
+    transform: translateX(-1.75rem);
+  }
+  :root[data-reveal] .reveal--right,
+  :root[data-reveal] [data-reveal-group='right'] > * {
+    transform: translateX(1.75rem);
+  }
 }
 
 /* The movement is the part that causes trouble, so that is the part that goes.
@@ -399,12 +424,29 @@ section[id] {
 @media (prefers-reduced-motion: reduce) {
   :root[data-reveal] .reveal,
   :root[data-reveal] [data-reveal-group] > *,
+  :root[data-reveal] .reveal--right,
+  :root[data-reveal] [data-reveal-group='right'] > *,
   :root[data-reveal] .reveal.is-in,
   :root[data-reveal] [data-reveal-group].is-in > * {
     opacity: 1;
     transform: none;
     transition: none;
   }
+}
+
+/* Anything that arrives from the right has to be clipped by something, or its
+   travel widens the page and the window grows a horizontal scrollbar for the
+   length of the animation. Arriving from the left needs no such guard: content
+   overflowing the inline-start edge is not scrollable and never widens the page.
+
+   Clipped on the section rather than on the document. Overflow set on the root
+   propagates to the viewport, which is a change to how the whole page scrolls in
+   order to fix an animation in five places; on a section it reaches no further
+   than the thing that needs it, and there is nothing fixed inside one for a clip
+   context to catch. Measured either way in Chrome: the header stays fixed and
+   `scrollWidth` stays at the window width. */
+.reveal-frame {
+  overflow-x: clip;
 }
 
 /* ---- Side menu ---------------------------------------------------------------
