@@ -23,9 +23,19 @@ const tr = t(locale);
 ---
 
 <section id="rooms" class="py-20 sm:py-28" data-room-carousel>
-  <div class="reveal mx-auto max-w-6xl px-4">
-    <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
-    <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
+  {/* Heading and the way through to the full list on one line, as the offers
+      and activities sections do it. The link sits with the heading rather than
+      under the rail because it is an alternative to scrolling, not the thing
+      you arrive at once you have finished: a reader who would rather see all
+      seven rooms as a page should not have to travel the run to find that out. */}
+  <div class="reveal mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-4 px-4">
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-clay">{tr.nav.rooms}</p>
+      <h2 class="mt-3 font-serif text-4xl sm:text-5xl">{tr.ourRooms}</h2>
+    </div>
+    <a href={localePath(locale, '/rooms')} class="text-sm font-medium text-clay hover:underline">
+      {tr.allRooms} →
+    </a>
   </div>
 
   {/* The rail arrives as one object, not as a group: its cards already carry
@@ -35,32 +45,30 @@ const tr = t(locale);
     {rooms.map((room) => <RoomCard room={room} locale={locale} aspect="wide" />)}
   </div>
 
-  {/* Everything you can do with the rail, gathered under it rather than up
-      beside the heading: the rooms come first, and this is where you are once
-      you have run out of them. Back in the content column, the link on the same
-      left edge as the heading and the arrows out at the right.
+  {/* Only the arrows now, out at the right where the run ends and the reader's
+      hand already is. The row is the nav: with the full-list link moved up to
+      the heading there is nothing else in here, so hiding it has to take the
+      top margin with it or an empty band is left under the rail.
 
-      The gap above is wide because a card's own "View room" link lands directly
-      over this one in the same colour and size, and at a normal spacing the two
-      read as a pair belonging to that card rather than as the rail's own row. */}
-  <div class="mx-auto mt-14 flex max-w-6xl items-center justify-between gap-4 px-4">
-    <a href={localePath(locale, '/rooms')} class="text-sm font-medium text-clay hover:underline">
-      {tr.allRooms} →
-    </a>
-    {/* Hidden until the script confirms the rail actually overflows: on a wide
-        screen with few rooms there is nothing to scroll to. */}
-    <div class="hidden items-center gap-2 sm:flex" data-rail-nav hidden>
-      <button type="button" class="rail-nav" data-rail-prev aria-label={tr.scrollPrev}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
-          <path d="M15 5l-7 7 7 7" />
-        </svg>
-      </button>
-      <button type="button" class="rail-nav" data-rail-next aria-label={tr.scrollNext}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
+      Hidden until the script confirms the rail actually overflows, since on a
+      wide screen with few rooms there is nothing to scroll to, and below `sm`,
+      where the rail is swiped rather than stepped. The `hidden` attribute wins
+      over `sm:flex` on its own: Tailwind's preflight sets it `!important`. */}
+  <div
+    class="mx-auto mt-8 hidden max-w-6xl items-center justify-end gap-2 px-4 sm:flex"
+    data-rail-nav
+    hidden
+  >
+    <button type="button" class="rail-nav" data-rail-prev aria-label={tr.scrollPrev}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
+        <path d="M15 5l-7 7 7 7" />
+      </svg>
+    </button>
+    <button type="button" class="rail-nav" data-rail-next aria-label={tr.scrollNext}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
+        <path d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
   </div>
 </section>
 
