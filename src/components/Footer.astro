@@ -21,6 +21,11 @@ const sisterHotels = partners(locale);
 // what you book, what surrounds it, then the practical and the legal. Rooms,
 // offers, activities and contact were previously homepage anchors; they are the
 // same destinations as pages, which is what a footer should link to.
+//
+// Contact is last rather than in with the practical pages, so it lands at the
+// foot of the second column: it is the one link here somebody arrives at the
+// footer already looking for, and the end of the list is where the eye stops.
+// Twelve links over two columns puts six in each, so this is the last of them.
 const footerLinks = [
   { href: localePath(locale, '/rooms'), label: tr.nav.rooms },
   { href: localePath(locale, '/offers'), label: tr.nav.offers },
@@ -30,81 +35,92 @@ const footerLinks = [
   { href: localePath(locale, '/gallery'), label: tr.gallery.title },
   { href: localePath(locale, '/about'), label: tr.about },
   { href: localePath(locale, '/sustainability'), label: tr.sustainability },
-  { href: localePath(locale, '/contact'), label: tr.nav.contact },
   { href: localePath(locale, '/faq'), label: 'FAQ' },
   { href: localePath(locale, '/terms'), label: tr.terms },
   { href: localePath(locale, '/privacy'), label: tr.privacy },
+  { href: localePath(locale, '/contact'), label: tr.nav.contact },
 ];
 ---
 
 <footer class="bg-ink text-paper">
-  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="lg:col-span-2">
-      <Logo siteName={siteName} variant="light" class="h-20" />
+  <div class="mx-auto max-w-6xl px-4 py-16">
+    <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div>
+        <Logo siteName={siteName} variant="light" class="h-20" />
 
-      {/* The other houses in the group. External, so they open away from the
-          booking flow rather than navigating out of it. */}
-      <div class="mt-8">
-        <a
-          href={collectionHref(locale)}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-xs uppercase tracking-[0.2em] text-paper/50 transition-colors hover:text-paper/80"
-        >
-          {tr.partners}
-        </a>
-        <ul class="mt-3 space-y-1 text-sm">
-          {sisterHotels.map((hotel) => (
-            <li>
+        {/* The other houses in the group. External, so they open away from the
+            booking flow rather than navigating out of it. */}
+        <div class="mt-8">
+          <a
+            href={collectionHref(locale)}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs uppercase tracking-[0.2em] text-paper/50 transition-colors hover:text-paper/80"
+          >
+            {tr.partners}
+          </a>
+          <ul class="mt-3 space-y-1 text-sm">
+            {sisterHotels.map((hotel) => (
+              <li>
+                <a
+                  href={hotel.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-paper/80 transition-colors hover:text-paper"
+                >
+                  {hotel.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Pages only. The homepage section anchors this column used to carry are
+          the menu bar's job: from a page other than the homepage they navigate
+          away and jump, which is not what a footer link should do. Each anchor
+          that had a real page behind it keeps its place here as that page.
+
+          Two columns, so twelve links do not run down past the address beside
+          them, and split with CSS columns rather than a grid of two lists: a
+          grid would have to be filled row by row, which reads 1-2 across and
+          3-4 underneath while the eye goes down each column, and a screen
+          reader would follow the markup rather than the layout. Columns flow
+          down one and into the next, so what is seen and what is announced are
+          the same list. */}
+      <nav class="columns-2 gap-8 text-sm lg:col-span-2">
+        {footerLinks.map((link) => (
+          <a href={link.href} class="block pb-2 text-paper/80 transition-colors hover:text-paper">
+            {link.label}
+          </a>
+        ))}
+      </nav>
+
+      {/* Where to find the place, out on the right where a footer is read last. */}
+      <div class="space-y-1 text-sm text-paper/80">
+        {settings?.address && <p class="whitespace-pre-line">{settings.address}</p>}
+        {settings?.phone && (
+          <p><a href={`tel:${settings.phone}`} class="hover:text-paper">{settings.phone}</a></p>
+        )}
+        {settings?.email && (
+          <p><a href={`mailto:${settings.email}`} class="hover:text-paper">{settings.email}</a></p>
+        )}
+        {links.length > 0 && (
+          <div class="flex flex-wrap gap-4 pt-3">
+            {links.map((link) => (
               <a
-                href={hotel.href}
+                href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-paper/80 transition-colors hover:text-paper"
+                aria-label={link.label}
+                class="text-paper/70 transition-colors hover:text-paper"
               >
-                {hotel.name}
+                <SocialIcon name={link.key} />
               </a>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
-
-    {/* Pages only. The homepage section anchors this column used to carry are
-        the menu bar's job: from a page other than the homepage they navigate
-        away and jump, which is not what a footer link should do. Each anchor
-        that had a real page behind it keeps its place here as that page. */}
-    <nav class="space-y-2 text-sm">
-      {footerLinks.map((link) => (
-        <a href={link.href} class="block text-paper/80 transition-colors hover:text-paper">
-          {link.label}
-        </a>
-      ))}
-    </nav>
-
-    <div class="space-y-1 text-sm text-paper/80">
-      {settings?.address && <p class="whitespace-pre-line">{settings.address}</p>}
-      {settings?.phone && (
-        <p><a href={`tel:${settings.phone}`} class="hover:text-paper">{settings.phone}</a></p>
-      )}
-      {settings?.email && (
-        <p><a href={`mailto:${settings.email}`} class="hover:text-paper">{settings.email}</a></p>
-      )}
-      {links.length > 0 && (
-        <div class="flex flex-wrap gap-4 pt-3">
-          {links.map((link) => (
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-              class="text-paper/70 transition-colors hover:text-paper"
-            >
-              <SocialIcon name={link.key} />
-            </a>
-          ))}
-        </div>
-      )}
     </div>
   </div>
 
