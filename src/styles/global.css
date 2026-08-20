@@ -618,6 +618,20 @@ section[id] {
   scroll-snap-align: start;
 }
 
+/* On a phone the card is most of the screen, so snapping it to the left edge
+   parks it under the gutter with the next one already pushing in. Centre puts
+   the room in front of the reader with a sliver of its neighbours either side,
+   which is what makes it read as one room at a time.
+
+   Safe only because the rail loops: there is always a card either side, so
+   there is no first or last that can never reach the middle and leave the
+   scroll refusing to rest at the end. */
+@media (max-width: 639px) {
+  .room-rail > * {
+    scroll-snap-align: center;
+  }
+}
+
 /* While the rail is being pulled along by the mouse. Snapping comes off for the
    duration or it fights the hand, and the smooth behaviour has to go with it:
    every move of the drag sets `scrollLeft`, and each one of those would be

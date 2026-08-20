@@ -237,7 +237,16 @@ const tr = t(locale);
         if (card.width === 0) continue;
         const middle = card.left + card.width / 2;
         const fromEdge = Math.min(middle - box.left, box.right - middle);
-        const t = fromEdge <= 0 ? 0 : fromEdge >= card.width ? 1 : fromEdge / card.width;
+        // The falloff runs over one card width in from each edge, which works
+        // while the rail is wider than two cards. On a phone it is not: the card
+        // is most of the screen, so its centre can never get a full card width
+        // from the nearer edge, `t` topped out around 0.6, and every card sat
+        // permanently at 77% opacity with none ever reading as the one being
+        // looked at. Capping the ramp at half the rail makes the middle of a
+        // narrow rail fully lit, and changes nothing on a wide one, where half
+        // the rail is already the larger of the two.
+        const ramp = Math.min(card.width, box.width / 2);
+        const t = fromEdge <= 0 ? 0 : fromEdge >= ramp ? 1 : fromEdge / ramp;
         node.style.transform = `scale(${(MIN_SCALE + (1 - MIN_SCALE) * t).toFixed(4)})`;
         node.style.opacity = (MIN_FADE + (1 - MIN_FADE) * t).toFixed(3);
       }
