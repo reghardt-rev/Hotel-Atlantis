@@ -185,10 +185,26 @@ const slidesB = testing ? slidesBAll : [];
           If either of these ever becomes conditional again, keep the condition
           inside here. */}
       <Fragment slot="top-right">
+        {/* The reviews are a desktop overlay. On a phone the hero is one column
+            of photograph with the booking bar across the foot of it, and two
+            stacked panels in the corner leave the guest reading a quote instead
+            of seeing where they are staying. The booking box earns its place
+            there; a rotating rating does not, so it is hidden below `md` and the
+            corner is left to the one panel that asks for something.
+
+            Hidden in CSS rather than dropped from the markup, so the quotes are
+            still in the page for search engines, and so the fitting script in
+            Carousel can measure a column that really is just the box. */}
         {reviews.length > 0 ? (
-          <ReviewSlideshow locale={locale} reviews={reviews} source={settings?.reviewSource} />
+          <ReviewSlideshow
+            class="hidden md:block"
+            locale={locale}
+            reviews={reviews}
+            source={settings?.reviewSource}
+          />
         ) : (
           <ReviewScore
+            class="hidden md:block"
             locale={locale}
             score={settings?.reviewScore}
             reviews={settings?.reviewCount}
