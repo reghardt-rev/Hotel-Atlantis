@@ -17,7 +17,7 @@ carousel:
 carouselB:
   - image: /images/carousel-b/carouselB/0/image.jpg
     alt: The front of Hotel Atlantis on Ceintuurbaan
-    focal: center
+    focal: bottom
   - image: /images/carousel-b/carouselB/1/image.avif
     alt: A canal in the ring, lined with houseboats and elm trees
     focal: center
