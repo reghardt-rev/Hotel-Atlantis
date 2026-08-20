@@ -729,53 +729,6 @@ section[id] {
   display: none;
 }
 
-/* ---- Review ticker ----------------------------------------------------------
-   The phone's version of the hero review panel: one line of quotes moving
-   steadily past. The list is rendered twice inside the track, and the track
-   slides exactly half its own width, so the frame it ends on is identical to
-   the one it started on and the loop has no seam.
-
-   `width: max-content` is what makes that work: the track has to be as wide as
-   its contents rather than as wide as the screen, or 50% is half the viewport
-   and the animation jumps.
-
-   The mask fades both ends into the band so quotes are not cut off mid-letter
-   at the edges, which is what makes it read as a line passing by rather than a
-   box with text sliding in it.                                              */
-@keyframes review-ticker {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-.review-ticker {
-  overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-}
-.review-ticker__track {
-  display: flex;
-  width: max-content;
-  animation: review-ticker var(--ticker-seconds, 90s) linear infinite;
-}
-/* Reading is easier when the line holds still, so pointing at it stops it. */
-.review-ticker:hover .review-ticker__track,
-.review-ticker:focus-within .review-ticker__track {
-  animation-play-state: paused;
-}
-/* Movement is the whole component, so there is nothing to tone down: it stops,
-   and the line becomes an ordinary strip the reader can push along by hand.
-   Without the overflow change the rest of the quotes would be unreachable. */
-@media (prefers-reduced-motion: reduce) {
-  .review-ticker {
-    overflow-x: auto;
-  }
-  .review-ticker__track {
-    animation: none;
-  }
-}
-
 /* ---- Booking calendar -------------------------------------------------------
    Range picker for the hero booking bar. A native date input's popup cannot be
    styled, so the dates use this instead and it inherits the bar's glass look.
