@@ -606,7 +606,15 @@ section[id] {
 }
 .room-rail > * {
   flex: 0 0 auto;
-  width: clamp(17rem, 78vw, 23rem);
+  /* The photograph is what sells the room, and at 23rem it was the smallest
+     picture of a room anywhere on the site: smaller than the same room's own
+     thumbnails on its page. 30rem puts a little over two cards on screen at the
+     content width instead of nearly three, which is the right trade. A rail is
+     for showing that there is more beyond the edge, not for fitting the set.
+
+     The lower bound rises with it so a phone still gets one card and a clear
+     sliver of the next, which is what tells the reader it scrolls at all. */
+  width: clamp(19rem, 82vw, 30rem);
   scroll-snap-align: start;
 }
 
