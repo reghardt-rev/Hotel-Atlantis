@@ -7,6 +7,7 @@ import Carousel from '../components/Carousel.astro';
 import ReviewScore from '../components/ReviewScore.astro';
 import ReviewSlideshow from '../components/ReviewSlideshow.astro';
 import DirectBookingBox from '../components/DirectBookingBox.astro';
+import ReviewTicker from '../components/ReviewTicker.astro';
 import RoomRail from '../components/RoomRail.astro';
 import OfferCard from '../components/OfferCard.astro';
 import Benefits from '../components/sections/Benefits.astro';
@@ -192,12 +193,12 @@ const slidesB = testing ? slidesBAll : [];
             there; a rotating rating does not, so it is hidden below `md` and the
             corner is left to the one panel that asks for something.
 
-            Hidden in CSS rather than dropped from the markup, so the quotes are
             Cut at `lg` rather than `md`, because a phone held sideways is still
             a phone: most are 800 to 950 CSS pixels in landscape, which clears
             768 and would have brought the panel back on exactly the screen with
             the least room for it.
 
+            Hidden in CSS rather than dropped from the markup, so the quotes are
             still in the page for search engines, and so the fitting script in
             Carousel can measure a column that really is just the box. */}
         {reviews.length > 0 ? (
@@ -242,6 +243,15 @@ const slidesB = testing ? slidesBAll : [];
   )}
 
   <Benefits locale={locale} />
+
+  {/* The reviews, on the one screen where the hero has no room for them. Placed
+      above the welcome heading rather than inside it: the kicker and the title
+      under it are a pair, and a moving line between them separates the greeting
+      from the thing it is greeting you into.
+
+      `lg:hidden` is the exact complement of the `hidden lg:block` on the hero
+      panel, so one of the two is always showing and never both. */}
+  <ReviewTicker class="lg:hidden" locale={locale} reviews={reviews} source={settings?.reviewSource} />
 
   <Welcome locale={locale} />
 
