@@ -193,18 +193,23 @@ const slidesB = testing ? slidesBAll : [];
             corner is left to the one panel that asks for something.
 
             Hidden in CSS rather than dropped from the markup, so the quotes are
+            Cut at `lg` rather than `md`, because a phone held sideways is still
+            a phone: most are 800 to 950 CSS pixels in landscape, which clears
+            768 and would have brought the panel back on exactly the screen with
+            the least room for it.
+
             still in the page for search engines, and so the fitting script in
             Carousel can measure a column that really is just the box. */}
         {reviews.length > 0 ? (
           <ReviewSlideshow
-            class="hidden md:block"
+            class="hidden lg:block"
             locale={locale}
             reviews={reviews}
             source={settings?.reviewSource}
           />
         ) : (
           <ReviewScore
-            class="hidden md:block"
+            class="hidden lg:block"
             locale={locale}
             score={settings?.reviewScore}
             reviews={settings?.reviewCount}
