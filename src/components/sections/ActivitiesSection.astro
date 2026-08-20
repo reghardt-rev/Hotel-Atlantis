@@ -23,7 +23,23 @@ const activities = await listActivities(locale);
 
 // Cycled over the articles to give the collage its varied heights. Newest first,
 // so the first article gets the tallest frame.
-const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 'aspect-[16/10]', 'aspect-[5/4]'];
+//
+// `sm:` prefixed, because the varied heights are the whole point of a collage
+// and the exact opposite of it in a sideways run: on a phone the cards arrive
+// one at a time, and a set that changes shape as it goes reads as broken rather
+// than composed. Below `sm` they are all portrait instead, set on the element.
+//
+// Written out already prefixed rather than assembled with `'sm:' + shape`,
+// because Tailwind finds classes by scanning the source for whole strings and
+// would never see a name that only exists after concatenation.
+const shapes = [
+  'sm:aspect-[4/5]',
+  'sm:aspect-[4/3]',
+  'sm:aspect-[1/1]',
+  'sm:aspect-[3/4]',
+  'sm:aspect-[16/10]',
+  'sm:aspect-[5/4]',
+];
 ---
 
 <section id="activities" class="reveal-frame bg-sand">
@@ -52,6 +68,7 @@ const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 
               <a href={href} class="group block">
                 <div
                   class:list={[
+                    'aspect-[4/5]',
                     shapes[i % shapes.length],
                     'w-full overflow-hidden rounded-xl bg-gradient-to-br from-stone-warm to-sand',
                   ]}
