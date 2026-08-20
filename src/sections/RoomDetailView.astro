@@ -23,28 +23,39 @@ const schema = graph([
 ---
 
 <Layout title={room.title} description={room.shortDescription || ''} locale={locale} schema={schema}>
-  <article class="mx-auto max-w-4xl px-4 py-16">
-    <a href={localePath(locale, '/rooms')} class="text-sm text-muted hover:text-ink">
-      {tr.backToRooms}
-    </a>
+  {/* The article no longer carries one width for everything. Text keeps the
+      4xl measure it needs to stay readable; the photographs take 6xl, because a
+      room is sold on the pictures and cropping them to the width of a paragraph
+      was throwing away a third of the space available to them. */}
+  <article class="py-16">
+    <div class="mx-auto max-w-4xl px-4">
+      <a href={localePath(locale, '/rooms')} class="text-sm text-muted hover:text-ink">
+        {tr.backToRooms}
+      </a>
 
-    <h1 class="mt-4 font-serif text-5xl sm:text-6xl">{room.title}</h1>
+      <h1 class="mt-4 font-serif text-5xl sm:text-6xl">{room.title}</h1>
 
-    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-      {room.maxOccupancy != null && <span>{room.maxOccupancy} {tr.guests}</span>}
-      {room.sizeSqm != null && <span>{tr.sizeLabel}: {room.sizeSqm} m²</span>}
-      {room.bedType && <span>{tr.bedLabel}: {room.bedType}</span>}
+      <div class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+        {room.maxOccupancy != null && <span>{room.maxOccupancy} {tr.guests}</span>}
+        {room.sizeSqm != null && <span>{tr.sizeLabel}: {room.sizeSqm} m²</span>}
+        {room.bedType && <span>{tr.bedLabel}: {room.bedType}</span>}
+      </div>
     </div>
 
-    <div data-room-gallery class="mt-8">
+    <div data-room-gallery class="mx-auto mt-8 max-w-6xl px-4">
       <div class="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-sand via-stone-warm to-stone-warm">
         {photos[0] && (
           <img data-room-main src={photos[0].src} alt={photos[0].alt} class="h-full w-full object-cover" />
         )}
       </div>
 
+      {/* Two and four across. No room here has more than six photographs, so
+          the old six-column strip was sized for a set that does not exist and
+          shrank every thumbnail to about 135px on a laptop, too small to tell a
+          bathroom from a balcony, which is the whole job of a picker. Halving
+          the count and widening the container roughly doubles them. */}
       {photos.length > 1 && (
-        <div class="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
+        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {photos.map((photo, i) => (
             <button
               type="button"
@@ -62,24 +73,26 @@ const schema = graph([
       )}
     </div>
 
-    {room.shortDescription && <p class="mt-8 font-serif text-2xl leading-snug text-ink">{room.shortDescription}</p>}
+    <div class="mx-auto max-w-4xl px-4">
+      {room.shortDescription && <p class="mt-8 font-serif text-2xl leading-snug text-ink">{room.shortDescription}</p>}
 
-    {room.amenities?.length > 0 && (
-      <ul class="mt-6 flex flex-wrap gap-2">
-        {room.amenities.map((a: string) => (
-          <li class="rounded-full bg-sand px-3 py-1 text-sm text-ink">{a}</li>
-        ))}
-      </ul>
-    )}
-
-    <div class="rich mt-8 text-ink" set:html={body} />
-
-    <div class="mt-10 flex items-center gap-4">
-      <BookNow configId={mewsConfigId} label={tr.book} location="room_page" />
-      {room.priceFrom != null && (
-        <span class="text-sm text-muted">{tr.from} €{room.priceFrom} / {tr.perNight}</span>
+      {room.amenities?.length > 0 && (
+        <ul class="mt-6 flex flex-wrap gap-2">
+          {room.amenities.map((a: string) => (
+            <li class="rounded-full bg-sand px-3 py-1 text-sm text-ink">{a}</li>
+          ))}
+        </ul>
       )}
-    </div>
+
+      <div class="rich mt-8 text-ink" set:html={body} />
+
+      <div class="mt-10 flex items-center gap-4">
+        <BookNow configId={mewsConfigId} label={tr.book} location="room_page" />
+        {room.priceFrom != null && (
+          <span class="text-sm text-muted">{tr.from} €{room.priceFrom} / {tr.perNight}</span>
+        )}
+        </div>
+      </div>
   </article>
 </Layout>
 
