@@ -691,6 +691,59 @@ section[id] {
   margin-bottom: 2rem;
 }
 
+/* ---- Mobile rail -------------------------------------------------------------
+   Offers and activities become one sideways run below `sm`, and are left alone
+   at every width above it. Stacked, those two sections are the longest scroll on
+   the homepage: three offers and seven activities, each a photograph and a
+   paragraph, one after another. Sideways they cost one screen each and the
+   reader chooses how far to go.
+
+   Written as an override rather than a layout of its own, so the markup keeps
+   the grid and the collage it already had and this only has to undo them. That
+   is why `column-count` is reset: the activity collage is multicol, not grid,
+   and `display: flex` alone would leave the columns in place.
+
+   Emitted after Tailwind's utilities, so `display` here beats the `grid` class
+   on the offers container without needing `!important`.                      */
+@media (max-width: 639px) {
+  .mobile-rail {
+    display: flex;
+    flex-wrap: nowrap;
+    column-count: initial;
+    gap: 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    /* Proximity rather than mandatory, for the reason the room rail gives: the
+       last card cannot reach its own snap position, and mandatory refuses to
+       rest at the true end of the track. */
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    /* Out to the screen edges and back in again, so a card can sit half off the
+       edge. That overhang is what says there is more to the right; a run that
+       stops neatly at the margin looks like everything there is. */
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    padding-block: 0.25rem;
+  }
+  .mobile-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-rail > * {
+    display: block;
+    flex: 0 0 auto;
+    width: 78vw;
+    margin-bottom: 0;
+    scroll-snap-align: start;
+  }
+  /* The reveal brings these in from the side, and sideways travel inside a
+     horizontal scroller is scrollable width: the rail would start life a few
+     centimetres too wide and settle as the cards arrived. The fade stays, the
+     travel goes. */
+  :root[data-reveal] .mobile-rail > * {
+    transform: none;
+  }
+}
+
 /* ---- Gallery ----------------------------------------------------------------
    Filter chips and the lightbox controls. Kept here rather than as utilities so
    the pressed state can be driven straight off aria-pressed, which is the thing

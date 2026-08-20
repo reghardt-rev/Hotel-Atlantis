@@ -43,7 +43,7 @@ const shapes = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-[1/1]', 'aspect-[3/4]', 
     {activities.length === 0 ? (
       <p class="mt-8 text-muted">{tr.noActivities}</p>
     ) : (
-      <div class="activity-collage mt-10" data-reveal-group="right">
+      <div class="activity-collage mobile-rail mt-10" data-reveal-group="right">
         {activities.map((item, i) => {
           const e = item.entry;
           const href = localePath(locale, `/activities/${item.slug}`);
