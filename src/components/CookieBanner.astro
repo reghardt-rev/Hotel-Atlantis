@@ -81,8 +81,6 @@ const tr = t(locale);
         w.gtag('consent', 'update', { analytics_storage: 'granted' });
       }
       banner.hidden = true;
-      // Lets the promo modal know it can take the screen now.
-      window.dispatchEvent(new CustomEvent('atlantis:consent', { detail: { analytics } }));
     }
 
     banner.querySelector('[data-cookie-accept]')?.addEventListener('click', () => decide(true));

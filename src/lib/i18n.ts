@@ -90,12 +90,6 @@ export const ui = {
       next: 'Next photo',
       empty: 'No photographs yet.',
     },
-    promo: {
-      title: 'Book direct and save',
-      body: 'Booking on this website always gets you our best available rate, plus the offers below.',
-      allOffers: 'View all offers',
-      close: 'Close',
-    },
     cookies: {
       title: 'Cookies',
       body: 'We use analytics cookies to understand how this site is used. They are only set if you accept.',
@@ -189,12 +183,6 @@ export const ui = {
       next: 'Volgende foto',
       empty: 'Nog geen foto\'s.',
     },
-    promo: {
-      title: 'Boek direct en bespaar',
-      body: 'Boeken via deze website levert u altijd onze beste beschikbare prijs op, plus de aanbiedingen hieronder.',
-      allOffers: 'Bekijk alle aanbiedingen',
-      close: 'Sluiten',
-    },
     cookies: {
       title: 'Cookies',
       body: 'We gebruiken analytische cookies om te begrijpen hoe deze site wordt gebruikt. Ze worden alleen geplaatst als u accepteert.',
@@ -287,12 +275,6 @@ export const ui = {
       prev: 'Vorheriges Foto',
       next: 'Nächstes Foto',
       empty: 'Noch keine Fotos.',
-    },
-    promo: {
-      title: 'Direkt buchen und sparen',
-      body: 'Wer auf dieser Website bucht, erhält immer unseren besten verfügbaren Preis, dazu die Angebote unten.',
-      allOffers: 'Alle Angebote ansehen',
-      close: 'Schließen',
     },
     cookies: {
       title: 'Cookies',

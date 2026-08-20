@@ -729,26 +729,6 @@ section[id] {
   display: none;
 }
 
-/* ---- Direct-booking promo --------------------------------------------------- */
-@keyframes promo-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.promo-card {
-  animation: promo-in 0.28s ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .promo-card {
-    animation: none;
-  }
-}
-
 /* ---- Booking calendar -------------------------------------------------------
    Range picker for the hero booking bar. A native date input's popup cannot be
    styled, so the dates use this instead and it inherits the bar's glass look.
