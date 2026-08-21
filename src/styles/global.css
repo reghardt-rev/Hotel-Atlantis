@@ -464,6 +464,18 @@ section[id] {
   overflow-x: clip;
 }
 
+/* The lightbox photograph springs back from a swipe that did not travel far
+   enough. The script clears this to `none` for the duration of the drag, so the
+   image follows the finger exactly rather than easing after it. */
+.lb-img {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-img {
+    transition: none;
+  }
+}
+
 /* ---- Side menu ---------------------------------------------------------------
    Kept out of sight with `visibility` rather than `display`, so the panel can
    slide rather than appear. The delayed visibility transition holds it around

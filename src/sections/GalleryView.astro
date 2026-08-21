@@ -89,9 +89,14 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
         <button type="button" data-lb-close aria-label={tr.gallery.close} class="gal-nav text-2xl">×</button>
       </div>
 
-      <div class="relative flex flex-1 items-center justify-center px-4 pb-4">
+      {/* `touch-pan-y` leaves vertical gestures to the browser and hands the
+          horizontal ones to the script below, which is what stops a swipe being
+          eaten as a scroll before it is ever recognised. */}
+      <div data-lb-stage class="relative flex flex-1 touch-pan-y items-center justify-center px-4 pb-4">
         <button type="button" data-lb-prev aria-label={tr.gallery.prev} class="gal-nav absolute left-3 text-3xl">‹</button>
-        <img data-lb-img src="" alt="" class="max-h-full max-w-full rounded-lg object-contain" />
+        {/* Or a drag picks the photograph up and hauls the browser's own ghost of
+            it around instead of running the gesture. */}
+        <img data-lb-img src="" alt="" draggable={false} class="lb-img max-h-full max-w-full rounded-lg object-contain" />
         <button type="button" data-lb-next aria-label={tr.gallery.next} class="gal-nav absolute right-3 text-3xl">›</button>
       </div>
 
@@ -187,10 +192,89 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
       }
     });
 
+    /* Swipe between photographs.
+     *
+     * Pointer events rather than touch events, so a finger, a pen and a mouse
+     * drag all run the same path, as they do on the hero and the room rail.
+     *
+     * The direction is decided once, on the first few pixels of travel, and then
+     * held: a gesture that starts vertical is handed straight back to the
+     * browser, one that starts horizontal is captured so it keeps arriving here
+     * even after the finger leaves the photograph. Deciding per-event instead
+     * makes a diagonal drag flicker between scrolling and swiping.
+     *
+     * The photograph follows the finger and fades as it goes, so the gesture is
+     * visibly doing something before it commits. Under the threshold it springs
+     * back; over it, the next photograph takes its place.
+     */
+    const stage = box.querySelector<HTMLElement>('[data-lb-stage]')!;
+    const SWIPE = 45; // px of travel before it counts as a swipe
+    const DECIDE = 8; // px before the direction is settled
+
+    let pointer: number | null = null;
+    let startX = 0;
+    let startY = 0;
+    let moved = 0;
+    let swiping = false;
+    let dragged = false;
+
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return;
+      pointer = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      moved = 0;
+      swiping = false;
+      dragged = false;
+    });
+
+    stage.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pointer) return;
+      const mx = e.clientX - startX;
+      const my = e.clientY - startY;
+
+      if (!swiping) {
+        if (Math.abs(mx) < DECIDE && Math.abs(my) < DECIDE) return;
+        if (Math.abs(my) > Math.abs(mx)) {
+          pointer = null;
+          return;
+        }
+        swiping = true;
+        dragged = true;
+        stage.setPointerCapture(e.pointerId);
+        img.style.transition = 'none';
+      }
+
+      moved = mx;
+      img.style.transform = `translateX(${moved}px)`;
+      img.style.opacity = String(Math.max(0.3, 1 - Math.abs(moved) / 420));
+    });
+
+    function endSwipe() {
+      if (pointer === null) return;
+      const travel = moved;
+      pointer = null;
+      swiping = false;
+      img.style.transition = '';
+      img.style.transform = '';
+      img.style.opacity = '';
+      if (Math.abs(travel) > SWIPE) show(at + (travel < 0 ? 1 : -1));
+    }
+
+    stage.addEventListener('pointerup', endSwipe);
+    stage.addEventListener('pointercancel', endSwipe);
+
     const filters = document.querySelector<HTMLElement>('[data-gallery-filters]');
     filters?.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
       if (!btn) return;
+      // A swipe finishes with a click. Without this, one that began on the
+      // photograph and ended past its edge would land on the backdrop and close
+      // the lightbox instead of turning the page.
+      if (dragged) {
+        dragged = false;
+        return;
+      }
       const want = btn.dataset.filter!;
 
       filters.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) =>
