@@ -143,6 +143,12 @@ export type GalleryPhoto = {
   group: 'hotel' | 'rooms' | 'activities' | 'offers';
   /** Attribution, where the photo is not the hotel's own. */
   credit?: string;
+  /**
+   * For room photography, the room it belongs to, already translated. The
+   * gallery filters by it, so it is the room's own title rather than its slug:
+   * a filter chip has to be readable, and the slug is English everywhere.
+   */
+  room?: string;
 };
 
 /**
@@ -159,11 +165,17 @@ export type GalleryPhoto = {
 export async function listAllPhotos(locale: Locale): Promise<GalleryPhoto[]> {
   const photos: GalleryPhoto[] = [];
   const seen = new Set<string>();
-  const add = (src: unknown, alt: string, group: GalleryPhoto['group'], credit?: string) => {
+  const add = (
+    src: unknown,
+    alt: string,
+    group: GalleryPhoto['group'],
+    credit?: string,
+    room?: string,
+  ) => {
     if (typeof src !== 'string' || !src) return;
     if (seen.has(src)) return;
     seen.add(src);
-    photos.push({ src, alt, group, ...(credit ? { credit } : {}) });
+    photos.push({ src, alt, group, ...(credit ? { credit } : {}), ...(room ? { room } : {}) });
   };
 
   const siteName = (await getSettings())?.siteName || 'Hotel Atlantis';
@@ -185,8 +197,10 @@ export async function listAllPhotos(locale: Locale): Promise<GalleryPhoto[]> {
   }
 
   // Room photography is shared across languages; the caption is the local title.
+  // Deduplication is by `src`, so a photograph shared by two rooms is filed
+  // under whichever comes first in the room order rather than appearing twice.
   for (const room of await listRooms(locale)) {
-    for (const photo of room.photos) add(photo.src, photo.alt, 'rooms');
+    for (const photo of room.photos) add(photo.src, photo.alt, 'rooms', undefined, room.entry.title);
   }
 
   for (const item of await listActivities(locale)) {

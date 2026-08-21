@@ -21,6 +21,11 @@ const { locale } = Astro.props;
 const tr = t(locale);
 const photos = await listAllPhotos(locale);
 
+// The room types that actually have photographs, in the order the rooms are
+// listed on the site rather than alphabetically: the gallery should read in the
+// same order as everything else about the rooms does.
+const roomTypes = [...new Set(photos.filter((p) => p.room).map((p) => p.room as string))];
+
 // Only offer a filter for groups that actually have photographs in them.
 const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) =>
   photos.some((p) => p.group === g),
@@ -49,12 +54,30 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
           </div>
         )}
 
+        {/* The room types, which only mean anything once Rooms is the filter.
+            Rendered always and revealed by the script rather than built on
+            demand: the set never changes, and a row already in the page cannot
+            arrive a frame late underneath the one above it. */}
+        {roomTypes.length > 1 && (
+          <div class="mt-3 flex flex-wrap gap-2" data-gallery-rooms hidden>
+            <button type="button" data-room-filter="all" class="gal-chip" aria-pressed="true">
+              {tr.gallery.allRooms}
+            </button>
+            {roomTypes.map((name) => (
+              <button type="button" data-room-filter={name} class="gal-chip" aria-pressed="false">
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div class="mt-10 gap-4 [column-count:1] sm:[column-count:2] lg:[column-count:3]" data-gallery-grid>
           {photos.map((photo, i) => (
             <button
               type="button"
               data-tile
               data-group={photo.group}
+              data-room={photo.room ?? ''}
               data-credit={photo.credit ?? ''}
               class="mb-4 block w-full break-inside-avoid overflow-hidden rounded-xl bg-stone-warm text-left"
             >
@@ -169,29 +192,6 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
     box.querySelector('[data-lb-prev]')?.addEventListener('click', () => show(at - 1));
     box.querySelector('[data-lb-next]')?.addEventListener('click', () => show(at + 1));
 
-    // Clicking the backdrop closes; clicking the photo or a control must not.
-    // Testing `e.target === box` would never fire: the three rows inside cover
-    // the overlay completely, so the click always lands on one of them.
-    box.addEventListener('click', (e) => {
-      if (!(e.target as HTMLElement).closest('img, button')) close();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (box.hidden) return;
-      if (e.key === 'Escape') close();
-      else if (e.key === 'ArrowLeft') show(at - 1);
-      else if (e.key === 'ArrowRight') show(at + 1);
-      else if (e.key === 'Tab') {
-        // Keep Tab inside the dialog rather than letting it walk the grid behind.
-        const stops = Array.from(box.querySelectorAll<HTMLElement>('button'));
-        const edge = e.shiftKey ? stops[0] : stops[stops.length - 1];
-        if (document.activeElement === edge) {
-          e.preventDefault();
-          (e.shiftKey ? stops[stops.length - 1] : stops[0]).focus();
-        }
-      }
-    });
-
     /* Swipe between photographs.
      *
      * Pointer events rather than touch events, so a finger, a pen and a mouse
@@ -264,10 +264,10 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
     stage.addEventListener('pointerup', endSwipe);
     stage.addEventListener('pointercancel', endSwipe);
 
-    const filters = document.querySelector<HTMLElement>('[data-gallery-filters]');
-    filters?.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
-      if (!btn) return;
+    // Clicking the backdrop closes; clicking the photo or a control must not.
+    // Testing `e.target === box` would never fire: the three rows inside cover
+    // the overlay completely, so the click always lands on one of them.
+    box.addEventListener('click', (e) => {
       // A swipe finishes with a click. Without this, one that began on the
       // photograph and ended past its edge would land on the backdrop and close
       // the lightbox instead of turning the page.
@@ -275,15 +275,78 @@ const groups = (['hotel', 'rooms', 'activities', 'offers'] as const).filter((g) 
         dragged = false;
         return;
       }
-      const want = btn.dataset.filter!;
+      if (!(e.target as HTMLElement).closest('img, button')) close();
+    });
 
-      filters.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) =>
-        b.setAttribute('aria-pressed', String(b === btn)),
-      );
+    document.addEventListener('keydown', (e) => {
+      if (box.hidden) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(at - 1);
+      else if (e.key === 'ArrowRight') show(at + 1);
+      else if (e.key === 'Tab') {
+        // Keep Tab inside the dialog rather than letting it walk the grid behind.
+        const stops = Array.from(box.querySelectorAll<HTMLElement>('button'));
+        const edge = e.shiftKey ? stops[0] : stops[stops.length - 1];
+        if (document.activeElement === edge) {
+          e.preventDefault();
+          (e.shiftKey ? stops[stops.length - 1] : stops[0]).focus();
+        }
+      }
+    });
+
+    /* Two filters, not one. The second names the room types and only appears
+     * while Rooms is the chosen group, because "Twin Room" is meaningless
+     * sitting beside "Around Amsterdam".
+     *
+     * Both are held as state and applied together, rather than each row hiding
+     * tiles on its own. Otherwise picking a room and then leaving Rooms would
+     * leave the room narrowing quietly in force over a set it no longer
+     * describes.
+     */
+    const filters = document.querySelector<HTMLElement>('[data-gallery-filters]');
+    const roomRow = document.querySelector<HTMLElement>('[data-gallery-rooms]');
+    let group = 'all';
+    let room = 'all';
+
+    function apply() {
       tiles.forEach((tile) => {
-        tile.hidden = want !== 'all' && tile.dataset.group !== want;
+        const inGroup = group === 'all' || tile.dataset.group === group;
+        // The room narrowing only bites inside Rooms; anywhere else it is not
+        // asked, which is what lets the choice survive a trip to another group
+        // and back.
+        const inRoom = group !== 'rooms' || room === 'all' || tile.dataset.room === room;
+        tile.hidden = !(inGroup && inRoom);
       });
       visible = tiles.filter((t) => !t.hidden);
+      if (roomRow) roomRow.hidden = group !== 'rooms';
+    }
+
+    function press(row: HTMLElement | null, attr: string, value: string) {
+      row?.querySelectorAll<HTMLButtonElement>(`[${attr}]`).forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.getAttribute(attr) === value)),
+      );
+    }
+
+    filters?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
+      if (!btn) return;
+      group = btn.dataset.filter!;
+      // Leaving Rooms drops the room narrowing rather than carrying it back in
+      // next time, which would look like the filter had failed.
+      if (group !== 'rooms') {
+        room = 'all';
+        press(roomRow, 'data-room-filter', 'all');
+      }
+      press(filters, 'data-filter', group);
+      apply();
+    });
+
+    roomRow?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-room-filter]');
+      if (!btn) return;
+      room = btn.dataset.roomFilter!;
+      press(roomRow, 'data-room-filter', room);
+      apply();
     });
   }
 </script>
