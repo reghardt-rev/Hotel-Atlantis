@@ -757,10 +757,16 @@ section[id] {
     gap: 1rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    /* Proximity rather than mandatory, for the reason the room rail gives: the
-       last card cannot reach its own snap position, and mandatory refuses to
-       rest at the true end of the track. */
-    scroll-snap-type: x proximity;
+    /* Mandatory. Proximity leaves the browser to decide and it declines in both
+       directions: a hard flick coasts past every snap point and stops between
+       two cards, a short push never travels far enough to be worth snapping at
+       all. Either way the run rests half on one card and half on the next.
+
+       Mandatory was avoided here because the last card cannot reach its own
+       snap position, and mandatory refuses to rest at the true end of a track.
+       The room rail escapes that by looping; these runs do not loop, so the
+       track is given a tail instead — see `padding-inline-end` below. */
+    scroll-snap-type: x mandatory;
     scrollbar-width: none;
     /* Out to the screen edges and back in again, so a card can sit half off the
        edge. That overhang is what says there is more to the right; a run that
@@ -768,6 +774,22 @@ section[id] {
     margin-inline: -1rem;
     padding-inline: 1rem;
     padding-block: 0.25rem;
+
+    /* Cards come to rest against the same inset the first one sits at, rather
+       than against the bare edge of the screen. Without this the last card
+       would align a rem further left than every other, which is visible as a
+       twitch at the end of the run. */
+    scroll-padding-inline-start: 1rem;
+
+    /* The tail that makes the last card reachable. It needs the screen, less
+       its own width and the leading inset, of track behind it before it can sit
+       where the others do; short of that, mandatory snapping simply refuses the
+       end of the run and springs back to the card before it.
+
+       Derived from `--rail-card` rather than repeating 78vw, so the two cannot
+       drift apart and quietly break the end of the run again. */
+    --rail-card: 78vw;
+    padding-inline-end: calc(100vw - var(--rail-card) - 1rem);
   }
   .mobile-rail::-webkit-scrollbar {
     display: none;
@@ -775,7 +797,7 @@ section[id] {
   .mobile-rail > * {
     display: block;
     flex: 0 0 auto;
-    width: 78vw;
+    width: var(--rail-card);
     margin-bottom: 0;
     scroll-snap-align: start;
   }
