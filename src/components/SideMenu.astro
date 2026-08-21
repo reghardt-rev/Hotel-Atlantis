@@ -12,7 +12,7 @@
 import BookNow from './BookNow.astro';
 import SocialIcon from './SocialIcon.astro';
 import Logo from './Logo.astro';
-import { t, localePath, sectionHref, sections, type Locale } from '../lib/i18n';
+import { t, localePath, type Locale } from '../lib/i18n';
 import { socialLinks } from '../lib/social';
 
 interface Props {
@@ -25,20 +25,28 @@ const { locale, siteName, mewsConfigId, settings } = Astro.props;
 const tr = t(locale);
 const links = socialLinks(settings);
 
-// Bold: everything that also appears in the menu bar, in the same order.
+// Bold: the main sections of the site, in the order the menu bar names them.
+//
+// Pages, not homepage anchors. The bar's links jump to a section of the
+// homepage, which is right there and wrong from anywhere else: followed from a
+// room page they navigate away and then jump, which is not what a site index is
+// for. Every one of these anchors had a real page behind it, so each is simply
+// that page now.
 const primary = [
-  ...sections.map((id) => ({ href: sectionHref(locale, id), label: tr.nav[id], section: id })),
+  { href: localePath(locale, '/rooms'), label: tr.nav.rooms },
+  { href: localePath(locale, '/offers'), label: tr.nav.offers },
+  { href: localePath(locale, '/activities'), label: tr.nav.activities },
+  { href: localePath(locale, '/amsterdam'), label: tr.nav.location },
+  { href: localePath(locale, '/contact'), label: tr.nav.contact },
   { href: localePath(locale, '/gallery'), label: tr.gallery.title },
   { href: localePath(locale, '/faq'), label: 'FAQ' },
 ];
 
-// Normal weight: the rest of the site.
+// Normal weight: the rest of the site. Rooms, activities, Amsterdam and contact
+// have left this list rather than appear twice, now that the bold tier links to
+// the same pages instead of to anchors.
 const secondary = [
-  { href: localePath(locale, '/rooms'), label: tr.allRooms },
-  { href: localePath(locale, '/activities'), label: tr.allActivities },
   { href: localePath(locale, '/facilities'), label: tr.facilities.title },
-  { href: localePath(locale, '/amsterdam'), label: tr.nav.location },
-  { href: localePath(locale, '/contact'), label: tr.nav.contact },
   { href: localePath(locale, '/about'), label: tr.about },
   { href: localePath(locale, '/sustainability'), label: tr.sustainability },
   { href: localePath(locale, '/socials'), label: tr.socials },
@@ -78,8 +86,6 @@ const secondary = [
             <a
               href={item.href}
               data-menu-link
-              data-section-link={item.section ? '' : undefined}
-              data-section={item.section}
               class="block rounded-lg px-3 py-2.5 font-semibold transition-colors hover:bg-sand"
             >
               {item.label}
