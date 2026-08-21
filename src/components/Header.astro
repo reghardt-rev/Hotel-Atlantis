@@ -19,7 +19,19 @@ const { locale, siteName, mewsConfigId, overHero = false, settings } = Astro.pro
 const tr = t(locale);
 const basePath = stripLocale(Astro.url.pathname);
 const home = localePath(locale, '/');
-const navItems = sections.map((id) => ({ id, label: tr.nav[id] }));
+// The bar's links scroll the homepage, except rooms, which goes to the room page
+// instead: it is the one section that is only a summary of itself. The rail
+// shows a handful of cards and loops, so someone reaching for "Rooms" wants the
+// list rather than the part of the homepage that advertises it.
+//
+// Anything given a `page` stops being an anchor and stops carrying the
+// scroll-spy attributes, which have nothing to point at once the link leaves the
+// homepage.
+const navItems = sections.map((id) => ({
+  id,
+  label: tr.nav[id],
+  page: id === 'rooms' ? localePath(locale, '/rooms') : undefined,
+}));
 
 // Where each flag goes. Room and activity slugs can be translated, so this is a
 // content lookup rather than just sticking a prefix on the current path.
@@ -75,7 +87,12 @@ const localeHrefs = Object.fromEntries(
 
     <nav class="hidden items-center gap-8 text-sm md:flex">
       {navItems.map((i) => (
-        <a href={`#${i.id}`} data-section-link data-section={i.id} class="transition-opacity hover:opacity-60">
+        <a
+          href={i.page ?? `#${i.id}`}
+          data-section-link={i.page ? undefined : ''}
+          data-section={i.page ? undefined : i.id}
+          class="transition-opacity hover:opacity-60"
+        >
           {i.label}
         </a>
       ))}
