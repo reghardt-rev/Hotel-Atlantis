@@ -641,6 +641,24 @@ section[id] {
 @media (max-width: 639px) {
   .room-rail > * {
     scroll-snap-align: center;
+    /* Narrower than it looks it should be. At 82vw the next room showed about
+       35px of itself, which is an edge rather than a photograph: nothing about
+       it said there was another room there, so nobody who did not already know
+       to swipe would have found out. 74vw leaves roughly 50px on each side,
+       enough to read as a card waiting its turn. */
+    width: clamp(17rem, 74vw, 30rem);
+  }
+  /* Mandatory, not proximity, once the run repeats.
+     Proximity leaves the browser to decide, and it declines twice: a hard flick
+     coasts past every snap point and stops between two rooms, and a short push
+     never travels far enough to be worth snapping at all. Either way the rail
+     rests half on one room and half on another.
+     Mandatory was avoided here because the last card cannot reach its own snap
+     position, and mandatory refuses to rest at the true end of a track. A
+     looping rail has no end: `is-looping` is set by the script once the copies
+     are in, so this only applies where that objection does not. */
+  .room-rail.is-looping {
+    scroll-snap-type: x mandatory;
   }
 }
 

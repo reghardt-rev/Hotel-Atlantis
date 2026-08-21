@@ -119,6 +119,9 @@ const tr = t(locale);
       rail!.prepend(...originals.map(copyOf));
       rail!.append(...originals.map(copyOf));
       looping = true;
+      // Mandatory snapping is only safe once the run repeats: see the note on
+      // `is-looping` in global.css.
+      rail!.classList.add('is-looping');
       measure();
       jumpTo(unit);
     }
@@ -223,8 +226,21 @@ const tr = t(locale);
      * the rail actually is. `transform` and `opacity` only, so nothing here
      * moves the layout or disturbs the scroll positions the loop depends on.
      */
-    const MIN_SCALE = 0.86;
-    const MIN_FADE = 0.4;
+    /* How far a card off-centre is shrunk and faded.
+     *
+     * Two settings, because the rail is two different things. On a wide screen
+     * three cards are on show and the falloff is what makes the middle one the
+     * subject; a neighbour at 0.4 is scenery and reads as such.
+     *
+     * On a phone the only thing off-centre is the sliver of the next room, and
+     * scenery is exactly what it must not be: that sliver is the entire signal
+     * that the rail scrolls at all. At 0.4 it was a grey smudge against the page
+     * and easy to miss. 0.78 keeps it plainly a photograph of another room while
+     * still sitting behind the one in front.
+     */
+    const narrow = window.matchMedia('(max-width: 639px)');
+    const minScale = () => (narrow.matches ? 0.94 : 0.86);
+    const minFade = () => (narrow.matches ? 0.78 : 0.4);
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let depthQueued = false;
@@ -247,8 +263,10 @@ const tr = t(locale);
         // the rail is already the larger of the two.
         const ramp = Math.min(card.width, box.width / 2);
         const t = fromEdge <= 0 ? 0 : fromEdge >= ramp ? 1 : fromEdge / ramp;
-        node.style.transform = `scale(${(MIN_SCALE + (1 - MIN_SCALE) * t).toFixed(4)})`;
-        node.style.opacity = (MIN_FADE + (1 - MIN_FADE) * t).toFixed(3);
+        const lowScale = minScale();
+        const lowFade = minFade();
+        node.style.transform = `scale(${(lowScale + (1 - lowScale) * t).toFixed(4)})`;
+        node.style.opacity = (lowFade + (1 - lowFade) * t).toFixed(3);
       }
     }
 
@@ -274,6 +292,8 @@ const tr = t(locale);
     // above is the fallback for browsers that do not fire it; both landing is
     // harmless, since a wrap that is already inside the window does nothing.
     rail.addEventListener('scrollend', wrap, { passive: true });
+    // Crossing the breakpoint changes both depth settings, so redraw at it.
+    narrow.addEventListener('change', queueDepth);
     window.addEventListener(
       'resize',
       () => {
