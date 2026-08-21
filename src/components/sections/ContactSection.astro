@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../../lib/i18n';
+import { mapsHref } from '../../lib/maps';
 interface Props {
   locale: Locale;
   settings: any;
@@ -11,9 +12,7 @@ const c = {
   de: { contactTitle: 'Kontakt', directions: 'Route' },
 }[locale];
 const address = settings?.address as string | undefined;
-const mapsHref = address
-  ? `https://maps.google.com/?q=${encodeURIComponent(address.replace(/\n/g, ', '))}`
-  : undefined;
+const directions = mapsHref(settings);
 ---
 
 <section id="contact" class="mx-auto max-w-6xl px-4 py-20 sm:py-28">
@@ -31,8 +30,8 @@ const mapsHref = address
         <p><a href={`mailto:${settings.email}`} class="hover:text-ink">{settings.email}</a></p>
       )}
     </div>
-    {mapsHref && (
-      <a href={mapsHref} target="_blank" rel="noopener" class="mt-5 inline-block text-sm font-medium text-clay hover:underline">
+    {directions && (
+      <a href={directions} target="_blank" rel="noopener" class="mt-5 inline-block text-sm font-medium text-clay hover:underline">
         {c.directions} →
       </a>
     )}

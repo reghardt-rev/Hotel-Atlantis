@@ -15,6 +15,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getSettings, getPage, renderMarkdoc } from '../lib/content';
 import { t, type Locale } from '../lib/i18n';
+import { mapsHref, mapsEmbedSrc } from '../lib/maps';
 import { hotelSchema, graph } from '../lib/schema';
 
 interface Props {
@@ -29,9 +30,8 @@ const body = page ? await renderMarkdoc(page.content) : '';
 const title = page?.title || tr.nav.contact;
 
 const address = settings?.address ?? '';
-const query = encodeURIComponent([settings?.siteName, address.replace(/\n/g, ', ')].filter(Boolean).join(', '));
-const embedSrc = `https://www.google.com/maps?q=${query}&output=embed`;
-const mapsLink = `https://www.google.com/maps/search/?api=1&query=${query}`;
+const embedSrc = mapsEmbedSrc(settings);
+const mapsLink = mapsHref(settings);
 
 const schema = graph([hotelSchema(settings, locale, Astro.site)]);
 ---

@@ -5,6 +5,7 @@ import RevenueGuruMark from './RevenueGuruMark.astro';
 import { socialLinks } from '../lib/social';
 import { partners, collectionHref } from '../lib/partners';
 import { t, localePath, type Locale } from '../lib/i18n';
+import { mapsHref } from '../lib/maps';
 
 interface Props {
   locale: Locale;
@@ -16,6 +17,7 @@ const year = new Date().getFullYear();
 const siteName = settings?.siteName ?? 'Hotel Atlantis';
 const links = socialLinks(settings);
 const sisterHotels = partners(locale);
+const directions = mapsHref(settings);
 
 // Every page the footer offers, in the order a visitor would work through them:
 // what you book, what surrounds it, then the practical and the legal. Rooms,
@@ -98,7 +100,24 @@ const footerLinks = [
 
       {/* Where to find the place, out on the right where a footer is read last. */}
       <div class="space-y-1 text-sm text-paper/80">
-        {settings?.address && <p class="whitespace-pre-line">{settings.address}</p>}
+        {/* The address is the thing people tap when they want the map, so it is
+            the link rather than sitting next to one. Opens away from the site:
+            a guest checking where the hotel is has not finished with the page.
+            Falls back to plain text if there is no address to search for. */}
+        {settings?.address && (
+          directions ? (
+            <a
+              href={directions}
+              target="_blank"
+              rel="noopener"
+              class="block whitespace-pre-line transition-colors hover:text-paper"
+            >
+              {settings.address}
+            </a>
+          ) : (
+            <p class="whitespace-pre-line">{settings.address}</p>
+          )
+        )}
         {settings?.phone && (
           <p><a href={`tel:${settings.phone}`} class="hover:text-paper">{settings.phone}</a></p>
         )}
