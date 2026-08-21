@@ -804,6 +804,17 @@ section[id] {
   display: none;
 }
 
+/* The calendar while it is parked on <body>, out of the hero's clip. `inset:
+   auto` clears the `bottom-full left-0 right-0` the panel wears in its usual
+   place, so the left, top and width set on it by the script are the only things
+   deciding where it sits. Above the header, which is z-50. */
+.cal-panel--floating {
+  position: fixed;
+  inset: auto;
+  z-index: 80;
+  margin: 0;
+}
+
 /* ---- Booking calendar -------------------------------------------------------
    Range picker for the hero booking bar. A native date input's popup cannot be
    styled, so the dates use this instead and it inherits the bar's glass look.

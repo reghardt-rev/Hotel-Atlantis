@@ -12,7 +12,9 @@
  * The dates use a custom range calendar rather than <input type="date">: a
  * native date popup is drawn by the browser and cannot be styled, so it could
  * never match the glass bar. The panel opens upward because the bar sits near
- * the bottom of the hero, which is clipped (`overflow-hidden`) below it.
+ * the bottom of the hero, which is clipped (`overflow-hidden`) below it. Once
+ * the page is scrolled the bar can be near the top of the window instead, where
+ * upward is off the screen entirely; see `position` in the script below.
  */
 import { t, localeTags, type Locale } from '../lib/i18n';
 
@@ -219,6 +221,59 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-m
         endText.textContent = end ? fmtField.format(parse(end)) : ' ';
       }
 
+      /* Upward is right while the bar sits low in the window. Scrolled down it
+       * is not: the bar rises, and the panel opens off the top of the screen
+       * where nobody can see it.
+       *
+       * Flipping it in CSS is not enough. Below the bar there is only the hero's
+       * bottom padding before `overflow-hidden` cuts it off, so a downward panel
+       * would lose everything past about 80px. Nor can it simply be
+       * `position: fixed` where it stands: the fitting script in Carousel gives
+       * the bar a `transform` on short screens, and a transformed ancestor makes
+       * a fixed descendant position against that ancestor and be clipped along
+       * with it.
+       *
+       * So when there is no room above, the panel is lifted out to the end of
+       * <body> and fixed under the bar, clear of the hero altogether. It is put
+       * back on close, leaving the ordinary upward case exactly as it was.
+       */
+      const GAP = 12;
+      const panelHome = panel.parentElement;
+      let floating = false;
+
+      function placeBelow() {
+        const r = bar!.getBoundingClientRect();
+        panel.style.left = `${r.left}px`;
+        panel.style.width = `${r.width}px`;
+        panel.style.top = `${r.bottom + GAP}px`;
+      }
+
+      function land() {
+        if (!floating) return;
+        floating = false;
+        panel.classList.remove('cal-panel--floating');
+        panel.style.left = panel.style.top = panel.style.width = '';
+        panelHome?.appendChild(panel);
+      }
+
+      function position() {
+        if (panel.hidden) return;
+        const wanted = panel.offsetHeight + GAP;
+        if (bar!.getBoundingClientRect().top < wanted) {
+          if (!floating) {
+            floating = true;
+            document.body.appendChild(panel);
+            panel.classList.add('cal-panel--floating');
+          }
+          placeBelow();
+        } else {
+          land();
+        }
+      }
+
+      window.addEventListener('scroll', position, { passive: true });
+      window.addEventListener('resize', position, { passive: true });
+
       function open(which: 'start' | 'end') {
         picking = which === 'end' && start ? 'end' : 'start';
         const anchor = (which === 'end' ? end || start : start) || today;
@@ -227,10 +282,15 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-m
         panel.hidden = false;
         triggers.forEach((t) => t.setAttribute('aria-expanded', String(t.dataset.field === which)));
         render();
+        // After `render`, or the height measured is an empty box and the panel
+        // concludes it fits above when it does not.
+        position();
       }
 
       function close() {
         panel.hidden = true;
+        // Or it would stay parked on <body>, outside the form it belongs to.
+        land();
         hover = null;
         triggers.forEach((t) => t.setAttribute('aria-expanded', 'false'));
       }
@@ -288,7 +348,10 @@ const labelClass = 'text-[0.65rem] font-medium uppercase tracking-[0.2em] text-m
       // which detaches the clicked button before the click finishes bubbling —
       // a `click` check would then see it as a click outside the bar and close.
       document.addEventListener('pointerdown', (e) => {
-        if (!panel.hidden && !bar.contains(e.target as Node)) close();
+        // The panel counts as inside even while parked on <body>, or picking a
+        // date would close the very thing being picked from.
+        const target = e.target as Node;
+        if (!panel.hidden && !bar.contains(target) && !panel.contains(target)) close();
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !panel.hidden) close();
