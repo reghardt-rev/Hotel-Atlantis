@@ -969,7 +969,7 @@ section[id] {
 }
 @media (min-width: 768px) {
   .site-header__bar {
-    --mark: 6rem;
+    --mark: 8.5rem;
   }
   /* Scrolled, it returns to the phone size and hands the height back to the page. */
   .site-header[data-scrolled] .site-header__bar {
@@ -1055,6 +1055,40 @@ section[id] {
 
 .site-header__utility {
   overflow: hidden;
+/* Everything else in the bar carries the same shade as the wordmark, and for
+   the same reason: over a photograph, white type with nothing behind it is only
+   as readable as whatever happens to be under it, and the header's gradient has
+   thinned to almost nothing by the time it reaches this row.
+
+   Two properties, because the bar is not all text. `text-shadow` takes the
+   links and the byline; `drop-shadow` takes the menu icon and the language
+   flags, which are SVG and which `text-shadow` does not touch at all.
+
+   Only while the header is transparent. Once it turns to paper the type is ink
+   on a light surface and a shadow under it reads as muddy, so both properties
+   are dropped and the transition carries them out.
+
+   The wordmark needs no exception here. It is an `img`, which `text-shadow`
+   cannot reach and which the `svg` rule does not select, so it keeps the halo
+   tuned to its own strokes and takes nothing from this.                     */
+.site-header.is-hero:not([data-scrolled]) {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 2px 14px rgba(0, 0, 0, 0.45);
+}
+.site-header.is-hero:not([data-scrolled]) svg {
+  filter:
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.8));
+}
+/* The Book now button is a solid block of accent with its own type on it. It
+   was never competing with the photograph, and a shadow inside it only smears
+   the label. */
+.site-header.is-hero:not([data-scrolled]) .distributor,
+.site-header.is-hero:not([data-scrolled]) .distributor svg {
+  text-shadow: none;
+  filter: none;
+}
   max-height: 3rem;
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
